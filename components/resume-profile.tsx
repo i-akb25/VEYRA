@@ -4,9 +4,9 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { profileFromResume, readResume } from "@/lib/resume";
 import type { CandidateProfile } from "@/lib/types";
 
-type Props = { profile: CandidateProfile; onChange: (profile: CandidateProfile) => void; onSave: () => void };
+type Props = { profile: CandidateProfile; saved: boolean; onChange: (profile: CandidateProfile) => void; onSave: () => void; onUseForSearch: () => void };
 
-export function ResumeProfile({ profile, onChange, onSave }: Props) {
+export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch }: Props) {
   const [resumeState, setResumeState] = useState("");
 
   async function parseResume(event: ChangeEvent<HTMLInputElement>) {
@@ -28,7 +28,7 @@ export function ResumeProfile({ profile, onChange, onSave }: Props) {
 
   return (
     <aside className="profile-panel" id="profile">
-      <div className="panel-title"><span>Private profile</span><small>On this device</small></div>
+      <div className="panel-title"><span>Private profile</span><small className={saved ? "saved" : ""}>{saved ? "Saved locally ✓" : "Not saved"}</small></div>
       <p className="panel-copy">Upload a resume or enter details manually. Resume parsing happens inside this browser; the file is never sent to VEYRA.</p>
       <label className="upload-control">
         <span>Parse resume locally</span>
@@ -47,7 +47,8 @@ export function ResumeProfile({ profile, onChange, onSave }: Props) {
         <label><span>Preferred locations</span><input value={profile.locations} onChange={(event) => onChange({ ...profile, locations: event.target.value })} placeholder="India, Bihar, Bengaluru, Remote" /></label>
         <label className="check-label"><input type="checkbox" checked={profile.recentGraduate} onChange={(event) => onChange({ ...profile, recentGraduate: event.target.checked })} /><span>Recent graduate</span></label>
         <label className="check-label"><input type="checkbox" checked={profile.remoteOnly} onChange={(event) => onChange({ ...profile, remoteOnly: event.target.checked })} /><span>Prioritise remote roles</span></label>
-        <button className="button secondary" type="submit">Save profile locally</button>
+        <button className="button secondary" type="submit">{saved ? "Profile saved ✓" : "Save profile locally"}</button>
+        <button className="use-profile" type="button" onClick={onUseForSearch} disabled={!profile.role.trim()}>Use profile in search →</button>
       </form>
       <p className="privacy-note"><span>●</span> Raw resume text is discarded after extraction. Only the fields above are stored.</p>
     </aside>

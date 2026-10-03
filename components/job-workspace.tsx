@@ -4,15 +4,16 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "re
 import { ApplicationWorkspace } from "./application-workspace";
 import { ResumeProfile } from "./resume-profile";
 import { SourceLaunchers } from "./source-launchers";
-import { scoreJob } from "@/lib/matching";
+import { matchesExperienceFilter, scoreJob } from "@/lib/matching";
 import type { ApplicationRecord, ApplicationStatus, CandidateProfile, CareerBoard, Job, LocalBackup, SearchFilters, SearchResponse } from "@/lib/types";
 
 const KEYS = { profile: "veyra.profile.v2", saved: "veyra.saved-jobs.v2", applications: "veyra.applications.v1", boards: "veyra.career-boards.v1", seen: "veyra.seen-jobs.v1" };
 const emptyProfile: CandidateProfile = { role: "", skills: "", locations: "", experience: "", experienceLevel: "any", graduationYear: "", education: "", remoteOnly: false, recentGraduate: false };
-const emptyFilters: SearchFilters = { experienceLevel: "any", postedWithin: "30", company: "", source: "all", employmentType: "", minimumSalary: "" };
+const emptyFilters: SearchFilters = { experienceLevel: "any", postedWithin: "any", company: "", source: "all", employmentType: "", minimumSalary: "" };
 type View = "results" | "saved" | "applications" | "sources";
 
 function safeRead<T>(key: string, fallback: T): T { try { const value = localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; } catch { return fallback; } }
+function safeWrite(key: string, value: unknown): boolean { try { localStorage.setItem(key, JSON.stringify(value)); return localStorage.getItem(key) !== null; } catch { return false; } }
 function download(name: string, content: string, type: string) { const blob = new Blob([content], { type }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = name; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 0); }
 function csvCell(value: unknown) { return `"${String(value ?? "").replaceAll('"', '""')}"`; }
 function salaryNumber(value: string) { const lpa = value.match(/([\d.]+)\s?(?:-|–|to)\s?[\d.]+\s?LPA/i); if (lpa) return Number(lpa[1]) * 100000; const raw = value.match(/[₹$]?[\s]?([\d,.]+)/); return raw ? Number(raw[1].replaceAll(",", "")) : 0; }
@@ -24,6 +25,7 @@ export function JobWorkspace() {
   const [location, setLocation] = useState("India");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [profile, setProfile] = useState<CandidateProfile>(emptyProfile);
+  const [profileSaved, setProfileSaved] = useState(false);
   const [saved, setSaved] = useState<Job[]>([]);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
   const [careerBoards, setCareerBoards] = useState<CareerBoard[]>([]);
@@ -43,27 +45,31 @@ export function JobWorkspace() {
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      setProfile(safeRead(KEYS.profile, emptyProfile)); setSaved(safeRead(KEYS.saved, []));
+      const storedProfile = safeRead<CandidateProfile | null>(KEYS.profile, null);
+      if (storedProfile) { setProfile(storedProfile); setProfileSaved(true); }
+      setSaved(safeRead(KEYS.saved, []));
       setApplications(safeRead(KEYS.applications, [])); setCareerBoards(safeRead(KEYS.boards, [])); setSeenJobIds(safeRead(KEYS.seen, []));
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const visibleJobs = useMemo(() => {
+  const filteredJobs = useMemo(() => {
     const hasProfile = Boolean(profile.role.trim() || profile.skills.trim() || profile.locations.trim());
-    const source = view === "saved" ? saved : jobs;
-    const filtered = source.filter((job) => {
+    const filterList = (source: Job[]) => source.filter((job) => {
       const age = job.publishedAt && referenceTime ? (referenceTime - Date.parse(job.publishedAt)) / 86_400_000 : null;
       const within = filters.postedWithin === "any" || age === null || age <= Number(filters.postedWithin);
-      const experience = filters.experienceLevel === "any" || job.experienceLevel === "any" || job.experienceLevel === filters.experienceLevel;
+      const experience = matchesExperienceFilter(filters.experienceLevel, job.experienceLevel);
       const company = !filters.company || job.company.toLowerCase().includes(filters.company.toLowerCase());
       const sourceMatch = filters.source === "all" || job.source === filters.source;
       const employment = !filters.employmentType || (job.employmentType ?? "").toLowerCase().includes(filters.employmentType.toLowerCase());
       const salary = !filters.minimumSalary || salaryNumber(job.salaryText ?? "") >= Number(filters.minimumSalary);
       return within && experience && company && sourceMatch && employment && salary;
     });
-    return hasProfile ? filtered.map((job) => scoreJob(job, profile)).sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0)) : filtered;
-  }, [jobs, saved, profile, view, filters, referenceTime]);
+    const score = (items: Job[]) => hasProfile ? items.map((job) => scoreJob(job, profile)).sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0)) : items;
+    return { results: score(filterList(jobs)), saved: score(filterList(saved)) };
+  }, [jobs, saved, profile, filters, referenceTime]);
+  const visibleJobs = view === "saved" ? filteredJobs.saved : filteredJobs.results;
+  const filtersActive = filters.experienceLevel !== "any" || filters.postedWithin !== "any" || Boolean(filters.company || filters.employmentType || filters.minimumSalary) || filters.source !== "all";
 
   async function search(event: FormEvent) {
     event.preventDefault(); setLoading(true); setError(""); setWarnings([]); setView("results");
@@ -75,16 +81,31 @@ export function JobWorkspace() {
       setJobs(data.jobs); setWarnings(data.warnings); setSources(data.sources); setHasSearched(true); setReferenceTime(Date.now());
       const unseen = data.jobs.filter((job) => !seenJobIds.includes(job.id) && job.freshness === "new");
       const updatedSeen = [...new Set([...seenJobIds, ...data.jobs.map((job) => job.id)])].slice(-1500);
-      setSeenJobIds(updatedSeen); localStorage.setItem(KEYS.seen, JSON.stringify(updatedSeen));
+      setSeenJobIds(updatedSeen); safeWrite(KEYS.seen, updatedSeen);
       if (unseen.length && "Notification" in window && Notification.permission === "granted") new Notification(`VEYRA found ${unseen.length} new role${unseen.length === 1 ? "" : "s"}`, { body: unseen.slice(0, 2).map((job) => `${job.title} · ${job.company}`).join("\n") });
     } catch { setError("VEYRA could not reach the job sources. Check your connection and try again."); }
     finally { setLoading(false); }
   }
 
-  function saveProfile() { localStorage.setItem(KEYS.profile, JSON.stringify(profile)); setNotice("Profile saved only on this device."); }
-  function saveBoards(boards: CareerBoard[]) { setCareerBoards(boards); localStorage.setItem(KEYS.boards, JSON.stringify(boards)); }
-  function persistSaved(next: Job[]) { setSaved(next); localStorage.setItem(KEYS.saved, JSON.stringify(next)); }
-  function persistApplications(next: ApplicationRecord[]) { setApplications(next); localStorage.setItem(KEYS.applications, JSON.stringify(next)); }
+  function changeProfile(next: CandidateProfile) { setProfile(next); setProfileSaved(false); }
+  function saveProfile() {
+    const stored = safeWrite(KEYS.profile, profile);
+    setProfileSaved(stored);
+    setNotice(stored ? "Profile saved locally and verified. Use it in search when you want to update the search fields." : "This browser blocked local storage. Your profile was not saved; check privacy settings and try again.");
+  }
+  function useProfileForSearch() {
+    const primaryRole = profile.role.split(/[,;\n]/).map((item) => item.trim()).find(Boolean) ?? "";
+    const primaryLocation = profile.locations.split(/[,;\n]/).map((item) => item.trim()).find(Boolean) ?? "";
+    if (primaryRole) setQuery(primaryRole);
+    if (primaryLocation) setLocation(primaryLocation);
+    setRemoteOnly(profile.remoteOnly);
+    setFilters((current) => ({ ...current, experienceLevel: profile.experienceLevel, postedWithin: "any" }));
+    setNotice("Search fields updated from your profile. Press “Search live roles” to fetch matching openings.");
+    document.querySelector<HTMLFormElement>(".search-bar")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function saveBoards(boards: CareerBoard[]) { if (safeWrite(KEYS.boards, boards)) setCareerBoards(boards); else setNotice("This browser blocked local storage, so the career page was not saved."); }
+  function persistSaved(next: Job[]) { if (safeWrite(KEYS.saved, next)) setSaved(next); else setNotice("This browser blocked local storage, so the role was not saved."); }
+  function persistApplications(next: ApplicationRecord[]) { if (safeWrite(KEYS.applications, next)) setApplications(next); else setNotice("This browser blocked local storage, so the application was not saved."); }
   function toggleSaved(job: Job) { persistSaved(saved.some((item) => item.id === job.id) ? saved.filter((item) => item.id !== job.id) : [job, ...saved]); }
   function track(job: Job) {
     const existing = applications.find((record) => record.job.id === job.id);
@@ -119,7 +140,7 @@ export function JobWorkspace() {
       if (data.version !== 1 || !data.profile || !Array.isArray(data.saved) || !Array.isArray(data.applications) || !Array.isArray(data.careerBoards) ||
         data.saved.some((job) => !safeHttpUrl(job.url)) || data.applications.some((record) => !safeHttpUrl(record.job.url)) || data.careerBoards.some((board) => !safeBoardUrl(board.url))) throw new Error();
       setProfile(data.profile); persistSaved(data.saved); persistApplications(data.applications); saveBoards(data.careerBoards); setSeenJobIds(data.seenJobIds ?? []);
-      localStorage.setItem(KEYS.profile, JSON.stringify(data.profile)); localStorage.setItem(KEYS.seen, JSON.stringify(data.seenJobIds ?? [])); setNotice("Local VEYRA backup restored.");
+      safeWrite(KEYS.profile, data.profile); safeWrite(KEYS.seen, data.seenJobIds ?? []); setProfileSaved(true); setNotice("Local VEYRA backup restored.");
     } catch { setNotice("This is not a valid VEYRA backup."); }
     event.target.value = "";
   }
@@ -136,14 +157,14 @@ export function JobWorkspace() {
       </form>
 
       <div className="desk">
-        <ResumeProfile profile={profile} onChange={setProfile} onSave={saveProfile} />
+        <ResumeProfile profile={profile} saved={profileSaved} onChange={changeProfile} onSave={saveProfile} onUseForSearch={useProfileForSearch} />
         <div className="results-panel" aria-live="polite">
           <div className="results-tools">
             <div className="tabs">
-              <button className={view === "results" ? "active" : ""} onClick={() => setView("results")}>Results <span>{jobs.length}</span></button>
+              <button className={view === "results" ? "active" : ""} onClick={() => setView("results")}>Results <span>{filteredJobs.results.length}{filteredJobs.results.length !== jobs.length ? ` / ${jobs.length}` : ""}</span></button>
               <button className={view === "saved" ? "active" : ""} onClick={() => setView("saved")}>Saved <span>{saved.length}</span></button>
               <button className={view === "applications" ? "active" : ""} onClick={() => setView("applications")}>Applications <span>{applications.length}</span></button>
-              <button className={view === "sources" ? "active" : ""} onClick={() => setView("sources")}>Sources <span>{careerBoards.length}</span></button>
+              <button className={view === "sources" ? "active" : ""} onClick={() => setView("sources")}>Sources{careerBoards.length > 0 && <span>{careerBoards.length} added</span>}</button>
             </div>
             <div className="exports"><button onClick={() => exportJobs("csv")} disabled={!visibleJobs.length}>CSV ↓</button><button onClick={() => exportJobs("json")} disabled={!visibleJobs.length}>JSON ↓</button><button onClick={exportBackup}>Backup ↓</button><button onClick={() => restoreRef.current?.click()}>Restore ↑</button><input ref={restoreRef} hidden type="file" accept="application/json,.json" onChange={restoreBackup} /></div>
           </div>
@@ -158,10 +179,11 @@ export function JobWorkspace() {
               <label><span>Job type</span><input value={filters.employmentType} onChange={(event) => setFilters({ ...filters, employmentType: event.target.value })} placeholder="Full-time, contract" /></label>
               <label><span>Minimum salary</span><input inputMode="numeric" value={filters.minimumSalary} onChange={(event) => setFilters({ ...filters, minimumSalary: event.target.value.replace(/\D/g, "") })} placeholder="₹ per year" /></label>
               <button onClick={enableNotifications}>Enable local alerts</button>
+              {filtersActive && <button className="clear-filters" onClick={() => setFilters(emptyFilters)}>Clear filters</button>}
             </div>
             {warnings.map((warning) => <p className="warning" key={warning}>{warning}</p>)}{error && <p className="error">{error}</p>}
             {!hasSearched && view === "results" && !loading && <div className="empty-state"><span>↳</span><h3>Your shortlist starts here.</h3><p>Run a search or add company career pages under Sources.</p></div>}
-            {hasSearched && view === "results" && !loading && visibleJobs.length === 0 && <div className="empty-state"><span>0</span><h3>No exact matches.</h3><p>Broaden the role, location, experience level or posting-date filter.</p></div>}
+            {hasSearched && view === "results" && !loading && visibleJobs.length === 0 && <div className="empty-state"><span>0</span><h3>{jobs.length ? `${jobs.length} found, but filters hid them.` : "No live matches found."}</h3><p>{jobs.length ? "Your search worked. Clear the result filters to see every role that was returned." : "Try a broader role or location, or add company career pages under Sources."}</p>{jobs.length > 0 && <button className="button primary" onClick={() => setFilters(emptyFilters)}>Show all {jobs.length} roles</button>}</div>}
             {view === "saved" && saved.length === 0 && <div className="empty-state"><span>♡</span><h3>No saved roles yet.</h3><p>Save roles from results. They stay only on this device.</p></div>}
             <div className="job-list">{visibleJobs.map((job) => <JobCard key={job.id} job={job} saved={saved.some((item) => item.id === job.id)} tracked={applications.some((item) => item.job.id === job.id)} onSave={() => toggleSaved(job)} onTrack={() => track(job)} />)}</div>
           </>}

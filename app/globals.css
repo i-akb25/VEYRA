@@ -60,6 +60,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .panel-title { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,.15); }
 .panel-title span { font-family: Georgia, serif; font-size: 1.3rem; }
 .panel-title small { color: #aeb8b2; font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; }
+.panel-title small.saved { color: #8fd0a8; }
 .panel-copy { color: #aeb8b2; font-size: .8rem; line-height: 1.55; }
 .profile-panel label { margin-top: 1.25rem; }
 .profile-panel input, .profile-panel textarea, .profile-panel select { border-color: rgba(255,255,255,.18); }
@@ -72,6 +73,9 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .local-status { color: #c8d2cc; font-size: .72rem; line-height: 1.5; }
 .button.secondary { background: transparent; color: white; border: 1px solid rgba(255,255,255,.35); width: 100%; margin-top: 1.4rem; }
 .button.secondary:hover { border-color: white; }
+.use-profile { width: 100%; margin-top: .65rem; padding: .7rem; border: 0; background: transparent; color: #c8d2cc; cursor: pointer; font-size: .75rem; }
+.use-profile:hover:not(:disabled) { color: white; }
+.use-profile:disabled { opacity: .45; cursor: default; }
 .privacy-note { color: #8f9c95; font-size: .68rem; line-height: 1.5; margin: 1.4rem 0 0; }
 .privacy-note span { color: #72b58f; }
 
@@ -91,6 +95,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .filter-bar label { min-width: 115px; flex: 1; }
 .filter-bar label:nth-child(2) { min-width: 150px; }
 .filter-bar > button { flex: 0 0 auto; border: 1px solid var(--line); background: transparent; padding: .7rem; cursor: pointer; font-size: .72rem; }
+.filter-bar > button.clear-filters { color: var(--accent-dark); border-color: var(--accent); }
 .empty-state { min-height: 490px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; }
 .empty-state > span { color: var(--accent); font: 2rem var(--font-mono); }
 .empty-state h3 { font: 2.1rem Georgia, serif; margin: 1rem 0 .5rem; }

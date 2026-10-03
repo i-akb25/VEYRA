@@ -13,6 +13,13 @@ export function inferExperience(value: string): ExperienceLevel {
   return "any";
 }
 
+export function matchesExperienceFilter(filter: ExperienceLevel, jobLevel: ExperienceLevel): boolean {
+  if (filter === "any" || jobLevel === "any") return true;
+  if (filter === "fresher") return jobLevel === "fresher" || jobLevel === "entry";
+  if (filter === "entry") return jobLevel === "fresher" || jobLevel === "entry";
+  return jobLevel === "experienced";
+}
+
 export function getFreshness(publishedAt: string): Freshness {
   if (!publishedAt) return "unknown";
   const timestamp = Date.parse(publishedAt);

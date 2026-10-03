@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deduplicateJobs, getFreshness, inferExperience, scoreJob } from "./matching";
+import { deduplicateJobs, getFreshness, inferExperience, matchesExperienceFilter, scoreJob } from "./matching";
 import type { CandidateProfile, Job } from "./types";
 
 const job: Job = {
@@ -34,6 +34,13 @@ it("classifies fresher and experienced roles", () => {
 
 it("deduplicates equivalent listings", () => {
   expect(deduplicateJobs([job, { ...job, id: "2" }])).toHaveLength(1);
+});
+
+it("includes entry-level jobs in fresher searches", () => {
+  expect(matchesExperienceFilter("fresher", "fresher")).toBe(true);
+  expect(matchesExperienceFilter("fresher", "entry")).toBe(true);
+  expect(matchesExperienceFilter("fresher", "any")).toBe(true);
+  expect(matchesExperienceFilter("fresher", "experienced")).toBe(false);
 });
 
 it("marks invalid dates as unknown", () => {
