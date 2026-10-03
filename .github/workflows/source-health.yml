@@ -1,0 +1,35 @@
+name: Source health
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-feeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check official employer feeds
+        run: node scripts/verify-sources.mjs | tee source-health.log
+      - name: Publish run summary
+        if: always()
+        run: |
+          echo "## VEYRA employer source health" >> "$GITHUB_STEP_SUMMARY"
+          echo "Scheduled daily at 03:17 UTC. See the attached report for feed counts and failures." >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-health-${{ github.run_id }}
+          path: |
+            source-health-report.json
+            source-health.log
+          retention-days: 30

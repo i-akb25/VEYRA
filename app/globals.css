@@ -45,6 +45,12 @@ a { color: inherit; text-decoration: none; }
 .workspace-heading > p { max-width: 410px; line-height: 1.7; color: #aeb8b2; }
 .search-bar { max-width: 1450px; margin: 0 auto 1.5rem; background: #f7f5ee; color: var(--ink); padding: 1rem; display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; }
 .search-bar label:not(.check-label) { flex: 1; }
+.search-bar label { min-width: 145px; }
+.search-bar label:nth-child(2) { min-width: 210px; }
+.saved-searches { max-width: 1450px; margin: 0 auto 1.5rem; display: flex; gap: .5rem; overflow-x: auto; }
+.saved-searches > button, .saved-searches span { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.2); background: transparent; color: #c8d2cc; }
+.saved-searches button { border: 0; background: transparent; color: inherit; padding: .55rem .7rem; cursor: pointer; font-size: .7rem; }
+.saved-searches span button:last-child { color: #d9a18e; padding-left: .2rem; }
 label { display: block; }
 label > span { display: block; margin-bottom: .45rem; font-size: .7rem; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
 input, textarea, select { width: 100%; background: transparent; color: inherit; border: 0; border-bottom: 1px solid var(--line); padding: .65rem .1rem; outline: none; }
@@ -102,6 +108,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .search-options { display: flex; align-items: end; gap: 1.5rem; padding: .9rem 1.4rem; border-bottom: 1px solid var(--line); background: var(--paper-deep); }
 .search-options label { flex: 1; max-width: 520px; }
 .search-options p { margin: 0 0 .55rem; color: var(--muted); font-size: .72rem; }
+.search-options > button { flex: 0 0 auto; border: 1px solid var(--line); background: transparent; padding: .65rem; cursor: pointer; font-size: .7rem; }
 .source-health { padding: .8rem 1.4rem; border-bottom: 1px solid var(--line); font-size: .72rem; }
 .source-health summary { cursor: pointer; color: var(--muted); }
 .source-health > div { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }
@@ -153,6 +160,14 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .career-groups h4 { font: 1.05rem Georgia, serif; }
 .career-groups a { display: flex; justify-content: space-between; padding: .55rem 0; border-bottom: 1px solid var(--line); font-size: .75rem; }
 .career-groups a span { color: var(--accent-dark); }
+.employer-cloud { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; margin-top: 1.2rem; }
+.employer-cloud a { display: flex; flex-direction: column; gap: .35rem; padding: .8rem; border: 1px solid var(--line); }
+.employer-cloud strong { font: 1rem Georgia, serif; }.employer-cloud span { color: var(--muted); font-size: .62rem; text-transform: capitalize; }
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 1.2rem; }
+.feature-grid > div { background: var(--paper); padding: 1rem; }.feature-grid strong { font: 1rem Georgia, serif; }.feature-grid p { color: var(--muted); font-size: .7rem; line-height: 1.5; margin-bottom: 0; }
+.portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; margin-top: 1.2rem; }
+.portal-grid > a { position: relative; border: 1px solid var(--line); padding: 1rem; min-height: 125px; }
+.portal-grid span { display: flex; justify-content: space-between; gap: 1rem; }.portal-grid small { color: var(--muted); }.portal-grid p { color: var(--muted); font-size: .72rem; max-width: 75%; line-height: 1.45; }.portal-grid b { position: absolute; right: 1rem; bottom: 1rem; color: var(--accent-dark); font-size: .68rem; }
 
 .government-desk { padding: 1.5rem; }
 .government-head { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-end; }
@@ -232,6 +247,7 @@ footer span { color: var(--accent); }
   .search-options, .government-head { align-items: stretch; flex-direction: column; }
   .filter-bar label { width: 100%; }
   .field-pair, .application-fields, .board-form { flex-direction: column; }
+  .feature-grid, .portal-grid { grid-template-columns: 1fr; }
   .job-top { align-items: flex-start; }
   .principles { padding: 6rem 1.2rem; }
   footer { align-items: flex-start; flex-direction: column; gap: 1rem; }

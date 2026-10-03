@@ -1,10 +1,12 @@
-export const JOB_SOURCES = ["Remotive", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "Company Careers"] as const;
+export const JOB_SOURCES = ["Remotive", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "SmartRecruiters", "Company Careers"] as const;
 export type JobSource = (typeof JOB_SOURCES)[number];
 export type ExperienceLevel = "fresher" | "entry" | "experienced" | "any";
 export type Freshness = "new" | "recent" | "older" | "unknown";
 export type ApplicationStatus = "saved" | "applied" | "interview" | "rejected" | "offer";
-export type RoleCategory = "custom" | "software" | "electrical" | "automation" | "get" | "remote";
+export type RoleCategory = "custom" | "software" | "electrical" | "automation" | "get" | "sales" | "marketing" | "management" | "finance" | "hr" | "design" | "data" | "operations" | "support" | "healthcare" | "remote";
 export type Qualification = "any" | "btech" | "degree" | "diploma" | "iti";
+export type WorkplaceMode = "any" | "remote" | "hybrid" | "onsite";
+export type GeographyScope = "india" | "international" | "any";
 
 export type Job = {
   id: string;
@@ -12,6 +14,7 @@ export type Job = {
   company: string;
   location: string;
   remote: boolean;
+  workplace?: Exclude<WorkplaceMode, "any"> | "unknown";
   source: JobSource;
   url: string;
   publishedAt: string;
@@ -28,7 +31,7 @@ export type Job = {
   roleMatchScore?: number;
   qualification?: string;
   verifiedAt?: string;
-  locationFit?: "exact" | "india-fallback" | "global-remote";
+  locationFit?: "exact" | "india-fallback" | "global-remote" | "international" | "anywhere";
 };
 
 export type SourceHealth = { name: string; status: "healthy" | "degraded"; count: number; message?: string };
@@ -75,6 +78,19 @@ export type ApplicationRecord = {
 
 export type CareerBoard = { id: string; url: string; label: string };
 
+export type SearchPreset = {
+  id: string;
+  name: string;
+  query: string;
+  category: RoleCategory;
+  location: string;
+  scope: GeographyScope;
+  workplace: WorkplaceMode;
+  experienceLevel: ExperienceLevel;
+  qualification: Qualification;
+  negativeKeywords: string;
+};
+
 export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "Banking" | "Railway" | "PSU" | "Apprenticeship";
 export type GovernmentOpportunity = {
   id: string;
@@ -97,4 +113,6 @@ export type LocalBackup = {
   applications: ApplicationRecord[];
   careerBoards: CareerBoard[];
   seenJobIds: string[];
+  searchPresets?: SearchPreset[];
+  hiddenJobIds?: string[];
 };

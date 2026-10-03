@@ -6,7 +6,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 
 - Live job search through server-side source adapters
 - Remotive and Arbeitnow integrations with graceful partial failure
-- Official public Greenhouse, Lever and Ashby company-career adapters
+- Official public Greenhouse, Lever, Ashby and SmartRecruiters company-career adapters
 - Safe launchers for major private job platforms and official Indian government recruitment portals
 - Role, location, remote, fresher/experience, graduation, company, salary, source, job type and posting-date filters
 - PDF, DOCX, TXT and Markdown resume parsing performed entirely inside the browser
@@ -19,12 +19,17 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Browser notifications for newly discovered roles after a user-run search
 - Security headers, input validation, request timeouts, and no sensitive logging
 - Responsive, accessible interface with reduced-motion support
-- Role-specific search modes for software, electrical, automation/control, graduate engineer trainee and remote-first work
+- Role-specific search modes for software, data, electrical, automation, graduate, sales, marketing, management, finance, HR, design, operations, support and healthcare work
+- Independent India/international/any-country and onsite/hybrid/remote workplace controls
 - India and exact-city ranking with Delhi NCR/Gurugram and Bengaluru/Bangalore aliases
 - Automatic curated public ATS coverage for selected Indian and remote-first employers
 - Official-notice government desk for UPSC, SSC, BPSC, banking, railway, PSU and apprenticeship opportunities
 - Negative keywords, qualification filtering, source-health reporting, pagination and local-data deletion
 - Best-effort in-memory API rate limiting for serverless deployments
+- Curated employer registry with India and international coverage across four public ATS providers
+- Local saved search presets and locally hidden-result controls
+- Daily GitHub Actions source-health verification with downloadable reports
+- Safe launchers for major India, US, UK, European, Australian, startup and global job portals
 
 ## Local development
 
@@ -53,8 +58,10 @@ External job applications happen on the original source website and are outside 
 
 Public feeds and official pages can fail or change format. VEYRA reports partial provider failures and does not fabricate vacancies to make the result list look full. A globally shared rate limiter or continuous background notifications would require external infrastructure and environment variables; neither is silently simulated.
 
-## Planned next work
+## Source health
 
-- More official sources where public APIs and platform terms permit
-- Optional user-controlled cloud notification bridge storing only search rules and push-subscription metadata
-- Stronger semantic matching without sending resume data to third-party AI services
+Run `pnpm verify:sources` to validate the curated public employer feeds. GitHub Actions runs the same check daily and retains a JSON report for 30 days. A failing provider is isolated and shown as degraded; other sources continue to return results.
+
+## Boundaries
+
+VEYRA does not scrape LinkedIn, Indeed, Naukri, Foundit, Glassdoor, Wellfound or other restricted platforms. It provides safe search launchers to those services and aggregates only feeds that employers or ATS providers publish for public consumption.

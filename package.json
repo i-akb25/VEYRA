@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:sources": "node scripts/verify-sources.mjs"
   },
   "dependencies": {
     "mammoth": "^1.13.0",
