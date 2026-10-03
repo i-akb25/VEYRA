@@ -52,7 +52,7 @@ type BoardTarget = { provider: "greenhouse" | "lever" | "ashby"; slug: string; l
 const CURATED_BOARDS: Partial<Record<RoleCategory, BoardTarget[]>> = {
   software: [{ provider: "lever", slug: "acceldata", label: "Acceldata" }, { provider: "lever", slug: "100ms", label: "100ms" }, { provider: "lever", slug: "brillio-2", label: "Brillio" }, { provider: "greenhouse", slug: "mixpanel", label: "Mixpanel" }],
   electrical: [{ provider: "lever", slug: "alifsemi", label: "Alif Semiconductor" }], automation: [{ provider: "lever", slug: "alifsemi", label: "Alif Semiconductor" }],
-  get: [{ provider: "lever", slug: "acceldata", label: "Acceldata" }],
+  get: [],
   remote: [{ provider: "lever", slug: "smart-working-solutions", label: "Smart Working" }, { provider: "ashby", slug: "elevenlabs", label: "ElevenLabs" }, { provider: "ashby", slug: "emergence", label: "Emergence" }, { provider: "ashby", slug: "weave", label: "Weave" }]
 };
 function parseBoard(rawUrl: string): BoardTarget | null {
@@ -95,6 +95,14 @@ function relevance(job: Job, q: string, category: RoleCategory): number {
   let score = phrases.some((phrase) => title.includes(phrase)) ? 100 : 0; score += queryTokens.filter((term) => title.includes(term)).length * 45; score += queryTokens.filter((term) => body.includes(term)).length * 4;
   if (category !== "custom" && aliases[category].some((phrase) => title.includes(phrase) || body.includes(phrase))) score += 35; return score;
 }
+function categoryMatches(job: Job, category: RoleCategory): boolean {
+  if (job.source === "Company Careers" || category === "custom" || category === "remote") return true;
+  const title = job.title.toLowerCase();
+  if (category === "get") return /\b(graduate|trainee|apprentice|fresher|intern(?:ship)?)\b/.test(title);
+  if (category === "electrical") return /\b(electrical|power|maintenance|substation|energy)\b/.test(title);
+  if (category === "automation") return /\b(automation|control|plc|scada|instrumentation?|robot(?:ics)?|mechatronics?)\b/.test(title);
+  return /\b(software|developer|frontend|backend|full[ -]?stack|sde|cloud|data|platform|quality|test)\b/.test(title);
+}
 function allowRequest(request: NextRequest): boolean {
   const key = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous"; const now = Date.now(); const bucket = rateBuckets.get(key);
   if (rateBuckets.size > 10_000) for (const [storedKey, stored] of rateBuckets) if (stored.resetAt <= now) rateBuckets.delete(storedKey);
@@ -123,7 +131,7 @@ export async function GET(request: NextRequest) {
     const roleMatchScore = job.source === "Company Careers" ? Math.max(80, roleScore) : roleScore;
     return { ...job, roleMatchScore, relevanceScore: roleMatchScore + geoScore + (indianPlaces.test(job.location) ? 35 : 0) + (job.freshness === "new" ? 8 : job.freshness === "recent" ? 4 : 0), qualification: qualificationWords.find((term) => context.includes(term)), locationFit: locationFit(job, location) };
   }).filter((job) => {
-    const context = `${job.title} ${job.description} ${job.tags.join(" ")}`.toLowerCase(); const title = job.title.toLowerCase(); if (!job.url || !job.locationFit || (remote === "true" && !job.remote) || negatives.some((term) => title.includes(term))) return false;
+    const context = `${job.title} ${job.description} ${job.tags.join(" ")}`.toLowerCase(); const title = job.title.toLowerCase(); if (!job.url || !job.locationFit || !categoryMatches(job, category) || (remote === "true" && !job.remote) || negatives.some((term) => title.includes(term))) return false;
     if ((experience === "fresher" || experience === "entry") && (isSeniorRole(job.title) || /\b(?:[3-9]|1[0-9])\+?\s*years?\b/i.test(job.description.slice(0, 700)))) return false;
     if (experience !== "any" && experience !== "experienced" && job.experienceLevel === "experienced") return false;
     if (qualificationWords.length && !qualificationWords.some((term) => context.includes(term))) return false; return (job.roleMatchScore ?? 0) >= 45;
