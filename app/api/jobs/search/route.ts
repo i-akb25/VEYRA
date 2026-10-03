@@ -133,8 +133,9 @@ export async function GET(request: NextRequest) {
   const locationTerm = location.toLowerCase();
   const matches = (job: Job) => {
     const searchable = `${job.title} ${job.company} ${job.description} ${job.tags.join(" ")}`.toLowerCase();
+    const globallyRemote = job.remote && /\b(worldwide|anywhere|global|all countries)\b/i.test(job.location);
     return (terms.length === 0 || terms.every((term) => searchable.includes(term))) &&
-      (!locationTerm || job.location.toLowerCase().includes(locationTerm) || (job.remote && locationTerm === "remote")) &&
+      (!locationTerm || job.location.toLowerCase().includes(locationTerm) || globallyRemote || (job.remote && locationTerm === "remote")) &&
       (remote !== "true" || job.remote);
   };
   const jobs = deduplicateJobs(outcomes.flatMap((result) => result.status === "fulfilled" ? result.value.filter(matches).slice(0, 80) : []))
