@@ -53,6 +53,7 @@ export function scoreJob(job: Job, profile: CandidateProfile): Job {
   const matchedLocations = locationTokens.filter((token) => location.includes(token));
 
   let score = 28;
+  score += Math.min(12, Math.max(0, (job.relevanceScore ?? 0) / 12));
   score += Math.min(30, matchedRoles.length * 12);
   score += Math.min(26, matchedSkills.length * 5);
   score += matchedLocations.length ? 8 : 0;
@@ -81,4 +82,8 @@ export function deduplicateJobs(jobs: Job[]): Job[] {
     if (!current || Date.parse(job.publishedAt || "0") > Date.parse(current.publishedAt || "0")) unique.set(key, job);
   }
   return [...unique.values()];
+}
+
+export function isSeniorRole(value: string): boolean {
+  return /\b(senior|sr\.?|staff|lead|principal|manager|architect|director|head|vp|vice president|[3-9]\+?\s*years?|1[0-9]\+?\s*years?)\b/i.test(value) || /\b(?:sde|software development engineer)\s*(?:ii|iii|iv|2|3|4)\b/i.test(value);
 }

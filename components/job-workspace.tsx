@@ -2,15 +2,17 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ApplicationWorkspace } from "./application-workspace";
+import { GovernmentDesk } from "./government-desk";
 import { ResumeProfile } from "./resume-profile";
 import { SourceLaunchers } from "./source-launchers";
 import { matchesExperienceFilter, scoreJob } from "@/lib/matching";
-import type { ApplicationRecord, ApplicationStatus, CandidateProfile, CareerBoard, Job, LocalBackup, SearchFilters, SearchResponse } from "@/lib/types";
+import type { ApplicationRecord, ApplicationStatus, CandidateProfile, CareerBoard, Job, LocalBackup, RoleCategory, SearchFilters, SearchResponse, SourceHealth } from "@/lib/types";
 
 const KEYS = { profile: "veyra.profile.v2", saved: "veyra.saved-jobs.v2", applications: "veyra.applications.v1", boards: "veyra.career-boards.v1", seen: "veyra.seen-jobs.v1" };
 const emptyProfile: CandidateProfile = { role: "", skills: "", locations: "", experience: "", experienceLevel: "any", graduationYear: "", education: "", remoteOnly: false, recentGraduate: false };
-const emptyFilters: SearchFilters = { experienceLevel: "any", postedWithin: "any", company: "", source: "all", employmentType: "", minimumSalary: "" };
-type View = "results" | "saved" | "applications" | "sources";
+const emptyFilters: SearchFilters = { experienceLevel: "any", postedWithin: "any", company: "", source: "all", employmentType: "", minimumSalary: "", qualification: "any" };
+type View = "results" | "saved" | "applications" | "government" | "sources";
+const PAGE_SIZE = 12;
 
 function safeRead<T>(key: string, fallback: T): T { try { const value = localStorage.getItem(key); return value ? JSON.parse(value) as T : fallback; } catch { return fallback; } }
 function safeWrite(key: string, value: unknown): boolean { try { localStorage.setItem(key, JSON.stringify(value)); return localStorage.getItem(key) !== null; } catch { return false; } }
@@ -22,7 +24,9 @@ function safeBoardUrl(value: string) { try { const url = new URL(value); return 
 
 export function JobWorkspace() {
   const [query, setQuery] = useState("software engineer");
+  const [roleCategory, setRoleCategory] = useState<RoleCategory>("software");
   const [location, setLocation] = useState("India");
+  const [negativeKeywords, setNegativeKeywords] = useState("senior, lead, manager, principal");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [profile, setProfile] = useState<CandidateProfile>(emptyProfile);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -33,6 +37,7 @@ export function JobWorkspace() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [sources, setSources] = useState<string[]>([]);
+  const [sourceHealth, setSourceHealth] = useState<SourceHealth[]>([]);
   const [filters, setFilters] = useState<SearchFilters>(emptyFilters);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,7 +46,17 @@ export function JobWorkspace() {
   const [referenceTime, setReferenceTime] = useState(0);
   const [view, setView] = useState<View>("results");
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>("saved");
+  const [page, setPage] = useState(1);
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
   const restoreRef = useRef<HTMLInputElement>(null);
+
+  function selectRoleCategory(next: RoleCategory) {
+    setRoleCategory(next);
+    const defaults: Record<RoleCategory, string> = { software: "software engineer", electrical: "electrical engineer", automation: "automation engineer", get: "graduate engineer trainee", remote: "software engineer", custom: "" };
+    setQuery(defaults[next]);
+    if (next === "get") setFilters((current) => ({ ...current, experienceLevel: "fresher" }));
+    setRemoteOnly(next === "remote");
+  }
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -51,6 +66,12 @@ export function JobWorkspace() {
       setApplications(safeRead(KEYS.applications, [])); setCareerBoards(safeRead(KEYS.boards, [])); setSeenJobIds(safeRead(KEYS.seen, []));
     });
     return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const wentOnline = () => setOnline(true); const wentOffline = () => setOnline(false);
+    window.addEventListener("online", wentOnline); window.addEventListener("offline", wentOffline);
+    return () => { window.removeEventListener("online", wentOnline); window.removeEventListener("offline", wentOffline); };
   }, []);
 
   const filteredJobs = useMemo(() => {
@@ -63,27 +84,32 @@ export function JobWorkspace() {
       const sourceMatch = filters.source === "all" || job.source === filters.source;
       const employment = !filters.employmentType || (job.employmentType ?? "").toLowerCase().includes(filters.employmentType.toLowerCase());
       const salary = !filters.minimumSalary || salaryNumber(job.salaryText ?? "") >= Number(filters.minimumSalary);
-      return within && experience && company && sourceMatch && employment && salary;
+      const qualificationTerms = ({ any: [], btech: ["b.tech", "btech", "b.e", "bachelor of engineering"], degree: ["degree", "bachelor", "graduate"], diploma: ["diploma"], iti: ["iti", "industrial training institute"] } as const)[filters.qualification];
+      const qualification = qualificationTerms.length === 0 || qualificationTerms.some((term) => `${job.title} ${job.description}`.toLowerCase().includes(term));
+      return within && experience && company && sourceMatch && employment && salary && qualification;
     });
     const score = (items: Job[]) => hasProfile ? items.map((job) => scoreJob(job, profile)).sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0)) : items;
     return { results: score(filterList(jobs)), saved: score(filterList(saved)) };
   }, [jobs, saved, profile, filters, referenceTime]);
   const visibleJobs = view === "saved" ? filteredJobs.saved : filteredJobs.results;
-  const filtersActive = filters.experienceLevel !== "any" || filters.postedWithin !== "any" || Boolean(filters.company || filters.employmentType || filters.minimumSalary) || filters.source !== "all";
+  const filtersActive = filters.experienceLevel !== "any" || filters.postedWithin !== "any" || Boolean(filters.company || filters.employmentType || filters.minimumSalary) || filters.source !== "all" || filters.qualification !== "any";
+  const totalPages = Math.max(1, Math.ceil(visibleJobs.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedJobs = visibleJobs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   async function search(event: FormEvent) {
     event.preventDefault(); setLoading(true); setError(""); setWarnings([]); setView("results");
     try {
-      const params = new URLSearchParams({ q: query, location, remote: String(remoteOnly), boards: careerBoards.map((board) => board.url).join("\n") });
+      const params = new URLSearchParams({ q: query, category: roleCategory, location, remote: String(remoteOnly), experience: filters.experienceLevel, qualification: filters.qualification, negative: negativeKeywords, boards: careerBoards.map((board) => board.url).join("\n") });
       const response = await fetch(`/api/jobs/search?${params}`);
-      if (!response.ok) throw new Error("Search failed");
+      if (!response.ok) { const body = await response.json().catch(() => ({})) as { error?: string }; throw new Error(body.error || "Search failed"); }
       const data = await response.json() as SearchResponse;
-      setJobs(data.jobs); setWarnings(data.warnings); setSources(data.sources); setHasSearched(true); setReferenceTime(Date.now());
+      setJobs(data.jobs); setWarnings(data.warnings); setSources(data.sources); setSourceHealth(data.health ?? []); setHasSearched(true); setReferenceTime(Date.now()); setPage(1);
       const unseen = data.jobs.filter((job) => !seenJobIds.includes(job.id) && job.freshness === "new");
       const updatedSeen = [...new Set([...seenJobIds, ...data.jobs.map((job) => job.id)])].slice(-1500);
       setSeenJobIds(updatedSeen); safeWrite(KEYS.seen, updatedSeen);
       if (unseen.length && "Notification" in window && Notification.permission === "granted") new Notification(`VEYRA found ${unseen.length} new role${unseen.length === 1 ? "" : "s"}`, { body: unseen.slice(0, 2).map((job) => `${job.title} · ${job.company}`).join("\n") });
-    } catch { setError("VEYRA could not reach the job sources. Check your connection and try again."); }
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "VEYRA could not reach the job sources. Check your connection and try again."); }
     finally { setLoading(false); }
   }
 
@@ -97,11 +123,18 @@ export function JobWorkspace() {
     const primaryRole = profile.role.split(/[,;\n]/).map((item) => item.trim()).find(Boolean) ?? "";
     const primaryLocation = profile.locations.split(/[,;\n]/).map((item) => item.trim()).find(Boolean) ?? "";
     if (primaryRole) setQuery(primaryRole);
+    const lowered = profile.role.toLowerCase();
+    setRoleCategory(lowered.includes("electrical") ? "electrical" : lowered.includes("automation") || lowered.includes("control") ? "automation" : lowered.includes("graduate") || lowered.includes("trainee") ? "get" : lowered.includes("software") || lowered.includes("developer") ? "software" : "custom");
     if (primaryLocation) setLocation(primaryLocation);
     setRemoteOnly(profile.remoteOnly);
     setFilters((current) => ({ ...current, experienceLevel: profile.experienceLevel, postedWithin: "any" }));
     setNotice("Search fields updated from your profile. Press “Search live roles” to fetch matching openings.");
     document.querySelector<HTMLFormElement>(".search-bar")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function deleteLocalData() {
+    if (!window.confirm("Delete your VEYRA profile, saved roles, application tracker, career pages and search history from this browser? This cannot be undone unless you made a backup.")) return;
+    Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
+    setProfile(emptyProfile); setProfileSaved(false); setSaved([]); setApplications([]); setCareerBoards([]); setSeenJobIds([]); setJobs([]); setHasSearched(false); setSourceHealth([]); setWarnings([]); setNotice("All local VEYRA data was deleted from this browser.");
   }
   function saveBoards(boards: CareerBoard[]) { if (safeWrite(KEYS.boards, boards)) setCareerBoards(boards); else setNotice("This browser blocked local storage, so the career page was not saved."); }
   function persistSaved(next: Job[]) { if (safeWrite(KEYS.saved, next)) setSaved(next); else setNotice("This browser blocked local storage, so the role was not saved."); }
@@ -149,31 +182,36 @@ export function JobWorkspace() {
     <section className="workspace" id="search">
       <div className="workspace-heading"><div><p className="eyebrow">Live opportunity desk</p><h2>Search less.<br />Decide better.</h2></div><p>Live feeds, direct company career pages, private resume matching and an application workspace without an account or database.</p></div>
       <form className="search-bar" onSubmit={search}>
+        <label><span>Role family</span><select value={roleCategory} onChange={(event) => selectRoleCategory(event.target.value as RoleCategory)}><option value="software">Software</option><option value="electrical">Electrical</option><option value="automation">Automation & controls</option><option value="get">GET / graduate trainee</option><option value="remote">Remote-first</option><option value="custom">Custom role</option></select></label>
         <label><span>Role, skill or exam</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="React engineer, GET, electrical" maxLength={100} /></label>
-        <label><span>Location demand</span><input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="India, Bihar, Bengaluru, Remote" maxLength={100} /></label>
+        <label><span>Location demand</span><input list="india-cities" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="India, Delhi, Lucknow, Gurugram" maxLength={100} /><datalist id="india-cities"><option value="India" /><option value="Delhi" /><option value="Gurugram" /><option value="Noida" /><option value="Lucknow" /><option value="Bengaluru" /><option value="Hyderabad" /><option value="Pune" /><option value="Mumbai" /><option value="Chennai" /><option value="Kolkata" /><option value="Patna" /></datalist></label>
         <label><span>Experience</span><select value={filters.experienceLevel} onChange={(event) => setFilters({ ...filters, experienceLevel: event.target.value as SearchFilters["experienceLevel"] })}><option value="any">Any level</option><option value="fresher">Freshers</option><option value="entry">0–2 years</option><option value="experienced">3+ years</option></select></label>
         <label className="check-label"><input type="checkbox" checked={remoteOnly} onChange={(event) => setRemoteOnly(event.target.checked)} /><span>Remote only</span></label>
-        <button className="button primary" type="submit" disabled={loading}>{loading ? "Searching…" : "Search live roles"}</button>
+        <button className="button primary" type="submit" disabled={loading || !online}>{loading ? "Searching…" : online ? "Search live roles" : "Offline"}</button>
       </form>
 
       <div className="desk">
-        <ResumeProfile profile={profile} saved={profileSaved} onChange={changeProfile} onSave={saveProfile} onUseForSearch={useProfileForSearch} />
+        <ResumeProfile profile={profile} saved={profileSaved} onChange={changeProfile} onSave={saveProfile} onUseForSearch={useProfileForSearch} onDeleteData={deleteLocalData} />
         <div className="results-panel" aria-live="polite">
           <div className="results-tools">
             <div className="tabs">
               <button className={view === "results" ? "active" : ""} onClick={() => setView("results")}>Results <span>{filteredJobs.results.length}{filteredJobs.results.length !== jobs.length ? ` / ${jobs.length}` : ""}</span></button>
               <button className={view === "saved" ? "active" : ""} onClick={() => setView("saved")}>Saved <span>{saved.length}</span></button>
               <button className={view === "applications" ? "active" : ""} onClick={() => setView("applications")}>Applications <span>{applications.length}</span></button>
+              <button className={view === "government" ? "active" : ""} onClick={() => setView("government")}>Government</button>
               <button className={view === "sources" ? "active" : ""} onClick={() => setView("sources")}>Sources{careerBoards.length > 0 && <span>{careerBoards.length} added</span>}</button>
             </div>
             <div className="exports"><button onClick={() => exportJobs("csv")} disabled={!visibleJobs.length}>CSV ↓</button><button onClick={() => exportJobs("json")} disabled={!visibleJobs.length}>JSON ↓</button><button onClick={exportBackup}>Backup ↓</button><button onClick={() => restoreRef.current?.click()}>Restore ↑</button><input ref={restoreRef} hidden type="file" accept="application/json,.json" onChange={restoreBackup} /></div>
           </div>
           {notice && <p className="notice" role="status">{notice}<button onClick={() => setNotice("")}>×</button></p>}
+          {!online && <p className="offline-state">You are offline. Saved roles, your profile and the application tracker still work; live search will resume when the connection returns.</p>}
           {view === "sources" && <SourceLaunchers query={query} location={location} boards={careerBoards} onBoardsChange={saveBoards} />}
+          {view === "government" && <GovernmentDesk />}
           {view === "applications" && <ApplicationWorkspace records={applications} activeStatus={applicationStatus} onStatusChange={setApplicationStatus} onUpdate={updateApplication} onRemove={(id) => persistApplications(applications.filter((item) => item.id !== id))} />}
           {(view === "results" || view === "saved") && <>
             <div className="filter-bar">
               <label><span>Posted</span><select value={filters.postedWithin} onChange={(event) => setFilters({ ...filters, postedWithin: event.target.value as SearchFilters["postedWithin"] })}><option value="1">24 hours</option><option value="7">7 days</option><option value="30">30 days</option><option value="any">Any time</option></select></label>
+              <label><span>Qualification</span><select value={filters.qualification} onChange={(event) => setFilters({ ...filters, qualification: event.target.value as SearchFilters["qualification"] })}><option value="any">Any</option><option value="btech">B.Tech / B.E.</option><option value="degree">Any degree</option><option value="diploma">Diploma</option><option value="iti">ITI</option></select></label>
               <label><span>Company</span><input value={filters.company} onChange={(event) => setFilters({ ...filters, company: event.target.value })} placeholder="Company" /></label>
               <label><span>Source</span><select value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value as SearchFilters["source"] })}><option value="all">All sources</option>{sources.map((source) => <option key={source} value={source}>{source}</option>)}</select></label>
               <label><span>Job type</span><input value={filters.employmentType} onChange={(event) => setFilters({ ...filters, employmentType: event.target.value })} placeholder="Full-time, contract" /></label>
@@ -181,11 +219,14 @@ export function JobWorkspace() {
               <button onClick={enableNotifications}>Enable local alerts</button>
               {filtersActive && <button className="clear-filters" onClick={() => setFilters(emptyFilters)}>Clear filters</button>}
             </div>
+            <div className="search-options"><label><span>Exclude keywords</span><input value={negativeKeywords} onChange={(event) => setNegativeKeywords(event.target.value)} placeholder="senior, manager, 5+ years" maxLength={300} /></label><p>Title matches rank first. India and exact-city roles rank above worldwide remote listings.</p></div>
+            {sourceHealth.length > 0 && <details className="source-health"><summary>Source health · {sourceHealth.filter((item) => item.status === "healthy").length}/{sourceHealth.length} available</summary><div>{sourceHealth.map((item) => <span className={item.status} key={item.name}>{item.name}: {item.status} ({item.count})</span>)}</div></details>}
             {warnings.map((warning) => <p className="warning" key={warning}>{warning}</p>)}{error && <p className="error">{error}</p>}
             {!hasSearched && view === "results" && !loading && <div className="empty-state"><span>↳</span><h3>Your shortlist starts here.</h3><p>Run a search or add company career pages under Sources.</p></div>}
             {hasSearched && view === "results" && !loading && visibleJobs.length === 0 && <div className="empty-state"><span>0</span><h3>{jobs.length ? `${jobs.length} found, but filters hid them.` : "No live matches found."}</h3><p>{jobs.length ? "Your search worked. Clear the result filters to see every role that was returned." : "Try a broader role or location, or add company career pages under Sources."}</p>{jobs.length > 0 && <button className="button primary" onClick={() => setFilters(emptyFilters)}>Show all {jobs.length} roles</button>}</div>}
             {view === "saved" && saved.length === 0 && <div className="empty-state"><span>♡</span><h3>No saved roles yet.</h3><p>Save roles from results. They stay only on this device.</p></div>}
-            <div className="job-list">{visibleJobs.map((job) => <JobCard key={job.id} job={job} saved={saved.some((item) => item.id === job.id)} tracked={applications.some((item) => item.job.id === job.id)} onSave={() => toggleSaved(job)} onTrack={() => track(job)} />)}</div>
+            <div className="job-list">{paginatedJobs.map((job) => <JobCard key={job.id} job={job} saved={saved.some((item) => item.id === job.id)} tracked={applications.some((item) => item.job.id === job.id)} onSave={() => toggleSaved(job)} onTrack={() => track(job)} />)}</div>
+            {visibleJobs.length > PAGE_SIZE && <nav className="pagination" aria-label="Results pages"><button disabled={safePage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>← Previous</button><span>Page {safePage} of {totalPages} · {visibleJobs.length} roles</span><button disabled={safePage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next →</button></nav>}
           </>}
         </div>
       </div>
@@ -196,7 +237,7 @@ export function JobWorkspace() {
 function JobCard({ job, saved, tracked, onSave, onTrack }: { job: Job; saved: boolean; tracked: boolean; onSave: () => void; onTrack: () => void }) {
   return <article className="job-card">
     <div className="job-top"><div><p className="job-source">{job.source} · {job.remote ? "Remote" : "On-site / hybrid"} · {job.freshness}</p><h3>{job.title}</h3><p className="company">{job.company} <span>·</span> {job.location}</p></div>{job.matchScore && <div className="score"><strong>{job.matchScore}</strong><span>fit</span></div>}</div>
-    <div className="job-meta"><span>{job.experienceLevel === "any" ? "Level not stated" : job.experienceLevel}</span>{job.employmentType && <span>{job.employmentType}</span>}{job.salaryText && <span>{job.salaryText}</span>}{job.publishedAt && <span>{new Date(job.publishedAt).toLocaleDateString()}</span>}</div>
+    <div className="job-meta"><span>{job.experienceLevel === "any" ? "Level not stated" : job.experienceLevel}</span>{job.locationFit === "exact" && <span>Exact location</span>}{job.locationFit === "india-fallback" && <span>Broader India result</span>}{job.locationFit === "global-remote" && <span>Worldwide remote</span>}{job.employmentType && <span>{job.employmentType}</span>}{job.salaryText && <span>{job.salaryText}</span>}{job.publishedAt && <span>{new Date(job.publishedAt).toLocaleDateString()}</span>}{job.verifiedAt && <span>Verified {new Date(job.verifiedAt).toLocaleDateString("en-IN")}</span>}</div>
     {job.matchReasons && <p className="reasons">{job.matchReasons.join(" · ")}</p>}
     {job.missingSkills && job.missingSkills.length > 0 && <p className="missing-skills">Not found in listing: {job.missingSkills.join(", ")}. Verify manually; job descriptions are incomplete.</p>}
     <p className="description">{job.description || "Open the source listing for full role details."}</p>

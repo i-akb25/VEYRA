@@ -8,7 +8,7 @@ export default function Home() {
         <nav aria-label="Primary navigation">
           <a href="#search">Search</a>
           <a href="#profile">Profile</a>
-          <a href="#privacy">Privacy</a>
+          <a href="/privacy">Privacy</a>
         </nav>
         <a className="header-cta" href="#search">Find roles</a>
       </header>

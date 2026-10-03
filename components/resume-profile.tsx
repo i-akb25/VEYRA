@@ -4,9 +4,9 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { profileFromResume, readResume } from "@/lib/resume";
 import type { CandidateProfile } from "@/lib/types";
 
-type Props = { profile: CandidateProfile; saved: boolean; onChange: (profile: CandidateProfile) => void; onSave: () => void; onUseForSearch: () => void };
+type Props = { profile: CandidateProfile; saved: boolean; onChange: (profile: CandidateProfile) => void; onSave: () => void; onUseForSearch: () => void; onDeleteData: () => void };
 
-export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch }: Props) {
+export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch, onDeleteData }: Props) {
   const [resumeState, setResumeState] = useState("");
 
   async function parseResume(event: ChangeEvent<HTMLInputElement>) {
@@ -49,6 +49,7 @@ export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch
         <label className="check-label"><input type="checkbox" checked={profile.remoteOnly} onChange={(event) => onChange({ ...profile, remoteOnly: event.target.checked })} /><span>Prioritise remote roles</span></label>
         <button className="button secondary" type="submit">{saved ? "Profile saved ✓" : "Save profile locally"}</button>
         <button className="use-profile" type="button" onClick={onUseForSearch} disabled={!profile.role.trim()}>Use profile in search →</button>
+        <button className="delete-local" type="button" onClick={onDeleteData}>Delete all local VEYRA data</button>
       </form>
       <p className="privacy-note"><span>●</span> Raw resume text is discarded after extraction. Only the fields above are stored.</p>
     </aside>

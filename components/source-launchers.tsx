@@ -23,6 +23,21 @@ const governmentSources = [
   ["Government vacancy directory", "https://www.ncs.gov.in/pages/govt-job-vacancies.aspx"]
 ] as const;
 
+const curatedCareerPages = [
+  ["Indian product & software", [
+    ["PhonePe", "https://www.phonepe.com/careers/"], ["Razorpay", "https://razorpay.com/jobs/"], ["Zoho", "https://careers.zohocorp.com/"], ["Freshworks", "https://www.freshworks.com/company/careers/"], ["Acceldata", "https://jobs.lever.co/acceldata"]
+  ]],
+  ["Electrical & automation", [
+    ["Hitachi Energy", "https://careers.hitachi.com/"], ["Siemens Energy", "https://jobs.siemens-energy.com/"], ["Schneider Electric", "https://www.se.com/in/en/about-us/careers/"], ["Rockwell Automation", "https://www.rockwellautomation.com/en-us/company/careers.html"], ["ABB", "https://careers.abb/global/en/home"]
+  ]],
+  ["Graduate & core engineering", [
+    ["Wipro", "https://careers.wipro.com/"], ["Daikin India", "https://career.daikinindia.com/"], ["POWERGRID", "https://www.powergrid.in/en/job-opportunities"], ["NTPC", "https://careers.ntpc.co.in/"], ["ISRO", "https://www.isro.gov.in/CurrentOpportunities.html"]
+  ]],
+  ["Remote-first", [
+    ["Smart Working", "https://jobs.lever.co/smart-working-solutions"], ["ElevenLabs", "https://jobs.ashbyhq.com/elevenlabs"], ["Weave", "https://jobs.ashbyhq.com/weave"], ["Emergence", "https://jobs.ashbyhq.com/emergence"]
+  ]]
+] as const;
+
 type Props = { query: string; location: string; boards: CareerBoard[]; onBoardsChange: (boards: CareerBoard[]) => void };
 
 export function SourceLaunchers({ query, location, boards, onBoardsChange }: Props) {
@@ -55,6 +70,11 @@ export function SourceLaunchers({ query, location, boards, onBoardsChange }: Pro
           {boards.length === 0 && <p>No company career pages added yet.</p>}
           {boards.map((board) => <div key={board.id}><a href={board.url} target="_blank" rel="noopener noreferrer">{board.label} ↗</a><button onClick={() => onBoardsChange(boards.filter((item) => item.id !== board.id))}>Remove</button></div>)}
         </div>
+      </section>
+      <section className="source-section">
+        <p className="eyebrow">Curated coverage</p><h3>Official company career pages</h3>
+        <p>These are direct employer pages grouped by the roles VEYRA is designed to cover. ATS-compatible companies are searched automatically when the matching role family is selected.</p>
+        <div className="career-groups">{curatedCareerPages.map(([group, links]) => <div key={group}><h4>{group}</h4>{links.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noopener noreferrer">{name} <span>↗</span></a>)}</div>)}</div>
       </section>
       <section className="source-section">
         <p className="eyebrow">Safe search launchers</p><h3>Major job platforms</h3>

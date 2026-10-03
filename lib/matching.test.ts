@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deduplicateJobs, getFreshness, inferExperience, matchesExperienceFilter, scoreJob } from "./matching";
+import { deduplicateJobs, getFreshness, inferExperience, isSeniorRole, matchesExperienceFilter, scoreJob } from "./matching";
 import type { CandidateProfile, Job } from "./types";
 
 const job: Job = {
@@ -45,4 +45,11 @@ it("includes entry-level jobs in fresher searches", () => {
 
 it("marks invalid dates as unknown", () => {
   expect(getFreshness("")).toBe("unknown");
+});
+
+it("detects senior roles and experience requirements", () => {
+  expect(isSeniorRole("Senior Electrical Engineer")).toBe(true);
+  expect(isSeniorRole("Engineer requiring 5+ years")).toBe(true);
+  expect(isSeniorRole("Software Development Engineer III")).toBe(true);
+  expect(isSeniorRole("Graduate Engineer Trainee")).toBe(false);
 });
