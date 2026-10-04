@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
+
+export const metadata: Metadata = {
+  title: "Privacy and data handling",
+  description: "How VEYRA processes searches, resumes and locally saved job-search data.",
+  alternates: { canonical: "/privacy" }
+};
 
 export default function PrivacyPage() {
   return <main className="policy-page">
-    <Link className="wordmark" href="/">VEYRA<span>.</span></Link>
+    <Link className="wordmark" href="/" aria-label="VEYRA home"><BrandLogo priority /></Link>
     <p className="eyebrow">Privacy and data handling</p>
     <h1>Your job search stays yours.</h1>
     <section><h2>What stays in your browser</h2><p>Profile fields extracted from your resume, saved jobs, application notes, deadlines, career-board URLs and seen-job identifiers are stored in your browser’s local storage for this site. They are not synchronized across devices.</p></section>

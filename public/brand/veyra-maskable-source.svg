@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VEYRA maskable app icon">
+  <rect width="512" height="512" fill="#18211d"/>
+  <path d="M139 145 254 376 373 145" fill="none" stroke="#fbfaf5" stroke-width="54" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="m254 323 92-178" fill="none" stroke="#c95932" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="373" cy="145" r="30" fill="#c95932"/>
+</svg>

@@ -1,10 +1,11 @@
 import { JobWorkspace } from "@/components/job-workspace";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <a className="wordmark" href="#top" aria-label="VEYRA home">VEYRA<span>.</span></a>
+        <a className="wordmark" href="#top" aria-label="VEYRA home"><BrandLogo priority /></a>
         <nav aria-label="Primary navigation">
           <a href="#search">Search</a>
           <a href="#profile">Profile</a>
@@ -49,7 +50,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <p>VEYRA <span>·</span> Built for the search, not the scroll.</p>
+        <div className="footer-brand"><BrandLogo light /><p>Built for the search, not the scroll.</p></div>
         <a href="#top">Back to top ↑</a>
       </footer>
     </main>

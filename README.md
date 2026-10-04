@@ -50,6 +50,18 @@ pnpm test
 pnpm build
 ```
 
+## Brand assets
+
+The production identity is stored under `public/brand`, `public/icons` and `public/social`.
+
+- `veyra-wordmark.svg` and `veyra-wordmark-light.svg` are the primary header/footer marks.
+- `veyra-mark.svg`, its light version and monochrome version cover compact placements.
+- `veyra-horizontal-lockup.svg` includes the product tagline for presentations and documentation.
+- `favicon.ico`, PNG favicons, Apple touch icon, standard app icons and a maskable icon cover browser and installed-app surfaces.
+- `og-default.png` is the 1200×630 Open Graph and Twitter sharing image; SVG and WebP versions are retained for reuse.
+
+The route-shaped V and destination point are original VEYRA artwork. Do not replace them with job-portal logos or third-party marks.
+
 ## Data policy
 
 Search terms and the public ATS career-page URLs selected by the user are sent only to VEYRA's `/api/jobs/search` route. The route uses them to retrieve and filter current listings and does not persist them. Candidate profiles, extracted resume fields, saved roles, application records, notes, dates and notification history use browser `localStorage`; they are not included in search requests. Raw resume text is discarded after local extraction. VEYRA does not use a database, authentication, analytics or advertising.

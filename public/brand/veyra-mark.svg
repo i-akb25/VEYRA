@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title description">
+  <title id="title">VEYRA mark</title>
+  <desc id="description">A route-shaped letter V ending at a destination point.</desc>
+  <path d="M18 18 47.5 78 78 18" fill="none" stroke="#18211d" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="m47.5 65 24-47" fill="none" stroke="#c95932" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="78" cy="18" r="7" fill="#c95932"/>
+</svg>

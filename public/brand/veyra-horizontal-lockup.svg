@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 104" role="img" aria-labelledby="title description">
+  <title id="title">VEYRA, job intelligence without the noise</title>
+  <desc id="description">VEYRA logo with product tagline.</desc>
+  <g transform="translate(2 4) scale(.9)">
+    <path d="M18 18 47.5 78 78 18" fill="none" stroke="#18211d" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="m47.5 65 24-47" fill="none" stroke="#c95932" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="78" cy="18" r="7" fill="#c95932"/>
+  </g>
+  <text x="95" y="58" fill="#18211d" font-family="Arial, Helvetica, sans-serif" font-size="49" font-weight="800" letter-spacing="7">VEYRA</text>
+  <circle cx="374" cy="55" r="5" fill="#c95932"/>
+  <text x="98" y="86" fill="#667069" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="2.2">JOB INTELLIGENCE WITHOUT THE NOISE</text>
+</svg>

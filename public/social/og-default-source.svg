@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">VEYRA job intelligence</title>
+  <desc id="description">Find work worth applying for with global job search and private local matching.</desc>
+  <rect width="1200" height="630" fill="#f2f0e8"/>
+  <circle cx="1000" cy="100" r="250" fill="#c95932" opacity=".08"/>
+  <path d="M770 514C852 392 870 250 1070 132" fill="none" stroke="#18211d" stroke-width="3" opacity=".18"/>
+  <circle cx="771" cy="513" r="11" fill="#18211d"/>
+  <circle cx="883" cy="336" r="9" fill="#f2f0e8" stroke="#18211d" stroke-width="3"/>
+  <circle cx="1070" cy="132" r="18" fill="#c95932"/>
+  <g transform="translate(78 64) scale(.72)">
+    <path d="M18 18 47.5 78 78 18" fill="none" stroke="#18211d" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="m47.5 65 24-47" fill="none" stroke="#c95932" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="78" cy="18" r="7" fill="#c95932"/>
+  </g>
+  <text x="146" y="111" fill="#18211d" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="800" letter-spacing="6">VEYRA</text>
+  <circle cx="365" cy="106" r="4.5" fill="#c95932"/>
+  <text x="80" y="266" fill="#18211d" font-family="Georgia, 'Times New Roman', serif" font-size="76" letter-spacing="-3">Find work worth</text>
+  <text x="80" y="350" fill="#18211d" font-family="Georgia, 'Times New Roman', serif" font-size="76" letter-spacing="-3">applying for.</text>
+  <text x="84" y="423" fill="#667069" font-family="Arial, Helvetica, sans-serif" font-size="24">Global opportunities. Explainable matching. Local-first privacy.</text>
+  <line x1="82" y1="505" x2="610" y2="505" stroke="#18211d" opacity=".25"/>
+  <text x="84" y="548" fill="#9c351c" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing="3">SEARCH  ·  COMPARE  ·  APPLY</text>
+</svg>
