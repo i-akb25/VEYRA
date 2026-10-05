@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { GOVERNMENT_OPPORTUNITIES } from "@/lib/government";
 import type { GovernmentCategory } from "@/lib/types";
 
-const categories: Array<"All" | GovernmentCategory> = ["All", "UPSC", "SSC", "BPSC", "Banking", "Railway", "PSU", "Apprenticeship"];
+const categories: Array<"All" | GovernmentCategory> = ["All", "UPSC", "SSC", "BPSC", "State PSC", "Banking", "Railway", "Defence", "PSU", "Apprenticeship", "Higher Studies", "Private Exam"];
 
 export function GovernmentDesk() {
   const [category, setCategory] = useState<"All" | GovernmentCategory>("All");
@@ -14,7 +14,7 @@ export function GovernmentDesk() {
 
   return <div className="government-desk">
     <div className="government-head">
-      <div><p className="eyebrow">Official notices, not portal shortcuts</p><h3>Government opportunity desk</h3><p>VEYRA removes expired notices from the open view using their stated deadlines. Always verify eligibility, corrigenda and the final deadline on the issuing authority’s website.</p></div>
+      <div><p className="eyebrow">Official notices, exams and study routes</p><h3>Public opportunity desk</h3><p>Government recruitment, PSUs, apprenticeships, major examinations and higher-study routes are linked only to official issuing authorities. Private assessments are clearly labelled. Always verify eligibility, corrigenda, fees and deadlines at the source.</p></div>
       <label className="check-label"><input type="checkbox" checked={includeRecent} onChange={(event) => setIncludeRecent(event.target.checked)} /><span>Show recent/closed notices</span></label>
     </div>
     <div className="government-tabs">{categories.map((item) => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>

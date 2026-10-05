@@ -14,11 +14,14 @@ export const employerRegistry = registry as EmployerSource[];
 
 export function employersForSearch(category: RoleCategory, scope: GeographyScope, limit = 12): EmployerSource[] {
   const role = category === "remote" ? "custom" : category;
-  const matching = employerRegistry.filter((employer) => {
-    const regionMatch = scope === "any" || employer.regions.includes(scope);
+  const regional = employerRegistry.filter((employer) => scope === "any" || employer.regions.includes(scope));
+  const tagged = regional.filter((employer) => {
     const categoryMatch = role === "custom" || employer.categories.includes(role);
-    return regionMatch && categoryMatch;
+    return categoryMatch;
   });
+  // New public role families must still search diverse live feeds while registry
+  // tagging catches up. Title filtering remains strict after retrieval.
+  const matching = tagged.length ? tagged : regional;
 
   // Keep every search diverse instead of letting one ATS dominate the request budget.
   const providers: BoardProvider[] = ["smartrecruiters", "greenhouse", "lever", "ashby"];

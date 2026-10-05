@@ -30,6 +30,17 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Local saved search presets and locally hidden-result controls
 - Daily GitHub Actions source-health verification with downloadable reports
 - Safe launchers for major India, US, UK, European, Australian, startup and global job portals
+- Neutral public defaults: all roles, any country and every workplace/experience mode
+- Multi-select role, workplace and experience controls with comma-separated location searches
+- Shareable URL-based searches that never include resume or profile fields
+- Relevance, newest, salary and company sorting plus compact/detailed result layouts
+- Local recently viewed jobs, four-job comparison and listing reports
+- Eligibility extraction for country, city, remote restrictions, sponsorship, work authorisation, language, experience, qualification, relocation and salary currency; missing facts remain “Not stated”
+- Twenty-minute employer-feed cache, five-minute result cache, six-request concurrency, source retries, timeouts and automatic runtime circuit breakers
+- 160 official employer career destinations across technology, manufacturing, healthcare, finance, education, retail, hospitality, construction and public-interest sectors
+- Expanded official opportunity desk for IOCL and other PSUs, defence recruitment, major examinations, private assessments and higher-study routes
+- Installable PWA shell with offline fallback for returning to locally stored work
+- Indexable About, Sources, Methodology, Privacy and Disclaimer pages, structured data, sitemap and robots policy
 
 ## Local development
 
@@ -68,7 +79,7 @@ Search terms and the public ATS career-page URLs selected by the user are sent o
 
 External job applications happen on the original source website and are outside VEYRA's control. Always verify employer identity and vacancy status before sharing personal information.
 
-Public feeds and official pages can fail or change format. VEYRA reports partial provider failures and does not fabricate vacancies to make the result list look full. A globally shared rate limiter or continuous background notifications would require external infrastructure and environment variables; neither is silently simulated.
+Public feeds and official pages can fail or change format. VEYRA reports partial provider failures and does not fabricate vacancies to make the result list look full. Feed and result caches are short-lived server memory/CDN caches and contain public search results, never resumes or profiles. A globally shared rate limiter or continuous background notifications would require external infrastructure and environment variables; neither is silently simulated.
 
 ## Source health
 
@@ -77,3 +88,5 @@ Run `pnpm verify:sources` to validate the curated public employer feeds. GitHub 
 ## Boundaries
 
 VEYRA does not scrape LinkedIn, Indeed, Naukri, Foundit, Glassdoor, Wellfound or other restricted platforms. It provides safe search launchers to those services and aggregates only feeds that employers or ATS providers publish for public consumption.
+
+Support and source corrections: akbsupportinfo@gmail.com. Do not send resumes, identity documents or application credentials.

@@ -3,10 +3,14 @@ export type JobSource = (typeof JOB_SOURCES)[number];
 export type ExperienceLevel = "fresher" | "entry" | "experienced" | "any";
 export type Freshness = "new" | "recent" | "older" | "unknown";
 export type ApplicationStatus = "saved" | "applied" | "interview" | "rejected" | "offer";
-export type RoleCategory = "custom" | "software" | "electrical" | "automation" | "get" | "sales" | "marketing" | "management" | "finance" | "hr" | "design" | "data" | "operations" | "support" | "healthcare" | "remote";
-export type Qualification = "any" | "btech" | "degree" | "diploma" | "iti";
+export type RoleCategory = "custom" | "software" | "electrical" | "automation" | "get" | "sales" | "marketing" | "management" | "finance" | "hr" | "design" | "data" | "operations" | "support" | "healthcare" | "education" | "science" | "legal" | "hospitality" | "retail" | "construction" | "trades" | "administration" | "media" | "agriculture" | "social" | "remote";
+export type Qualification = "any" | "school" | "iti" | "diploma" | "undergraduate" | "btech" | "postgraduate" | "phd" | "professional";
 export type WorkplaceMode = "any" | "remote" | "hybrid" | "onsite";
 export type GeographyScope = "india" | "international" | "any";
+export type RemoteScope = "worldwide" | "country-restricted" | "not-remote" | "not-stated";
+export type EligibilityValue = "yes" | "no" | "not-stated";
+export type SortMode = "relevance" | "newest" | "salary" | "company";
+export type ResultLayout = "detailed" | "compact";
 
 export type Job = {
   id: string;
@@ -32,9 +36,19 @@ export type Job = {
   qualification?: string;
   verifiedAt?: string;
   locationFit?: "exact" | "india-fallback" | "global-remote" | "international" | "anywhere";
+  country?: string;
+  city?: string;
+  remoteScope?: RemoteScope;
+  visaSponsorship?: EligibilityValue;
+  workAuthorization?: string;
+  requiredLanguage?: string;
+  experienceRange?: string;
+  relocation?: EligibilityValue;
+  salaryCurrency?: string;
+  lastCheckedAt?: string;
 };
 
-export type SourceHealth = { name: string; status: "healthy" | "degraded"; count: number; message?: string };
+export type SourceHealth = { name: string; status: "healthy" | "degraded" | "disabled"; count: number; message?: string; lastCheckedAt?: string; cached?: boolean };
 
 export type SearchResponse = {
   jobs: Job[];
@@ -42,6 +56,7 @@ export type SearchResponse = {
   warnings: string[];
   sources: string[];
   health: SourceHealth[];
+  cache: { status: "hit" | "miss"; maxAgeSeconds: number };
 };
 
 export type CandidateProfile = {
@@ -56,6 +71,8 @@ export type CandidateProfile = {
   recentGraduate: boolean;
 };
 
+export type LocalProfile = { id: string; name: string; profile: CandidateProfile };
+
 export type SearchFilters = {
   experienceLevel: ExperienceLevel;
   postedWithin: "any" | "1" | "7" | "30";
@@ -64,6 +81,8 @@ export type SearchFilters = {
   employmentType: string;
   minimumSalary: string;
   qualification: Qualification;
+  sort: SortMode;
+  layout: ResultLayout;
 };
 
 export type ApplicationRecord = {
@@ -89,9 +108,10 @@ export type SearchPreset = {
   experienceLevel: ExperienceLevel;
   qualification: Qualification;
   negativeKeywords: string;
+  industry?: string;
 };
 
-export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "Banking" | "Railway" | "PSU" | "Apprenticeship";
+export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "State PSC" | "Banking" | "Railway" | "Defence" | "PSU" | "Apprenticeship" | "Higher Studies" | "Private Exam";
 export type GovernmentOpportunity = {
   id: string;
   category: GovernmentCategory;
@@ -115,4 +135,6 @@ export type LocalBackup = {
   seenJobIds: string[];
   searchPresets?: SearchPreset[];
   hiddenJobIds?: string[];
+  profiles?: LocalProfile[];
+  activeProfileId?: string;
 };

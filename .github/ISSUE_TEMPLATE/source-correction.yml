@@ -1,0 +1,31 @@
+name: Source correction
+description: Report an expired, duplicate, misleading or broken public listing/source.
+title: "[Source correction] "
+labels: ["source-health"]
+body:
+  - type: input
+    id: official_url
+    attributes:
+      label: Official source URL
+      placeholder: https://
+    validations:
+      required: true
+  - type: dropdown
+    id: problem
+    attributes:
+      label: Problem
+      options:
+        - Expired or closed
+        - Duplicate
+        - Misleading title or location
+        - Broken source
+        - Incorrect eligibility information
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Do not include a resume, identity document, password or application credentials.
+    validations:
+      required: true

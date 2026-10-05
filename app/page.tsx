@@ -3,12 +3,17 @@ import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
   return (
-    <main>
+    <main id="main-content">
+      <a className="skip-link" href="#search">Skip to opportunity search</a>
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="VEYRA home"><BrandLogo priority /></a>
         <nav aria-label="Primary navigation">
           <a href="#search">Search</a>
-          <a href="#profile">Profile</a>
+          <a href="/jobs">Jobs</a>
+          <a href="/government-jobs">Government</a>
+          <a href="/sources">Sources</a>
+          <a href="/methodology">Method</a>
+          <a href="/about">About</a>
           <a href="/privacy">Privacy</a>
         </nav>
         <a className="header-cta" href="#search">Find roles</a>
@@ -19,8 +24,8 @@ export default function Home() {
           <p className="eyebrow">A quieter way to search</p>
           <h1>Find work worth<br />applying for.</h1>
           <p className="hero-intro">
-            VEYRA brings live opportunities into one focused workspace, explains why a role fits,
-            and keeps your personal data on your device.
+            Search jobs, government recruitment, examinations and higher-study routes across India
+            and global markets. Your personal workspace stays on your device.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#search">Start a live search</a>
@@ -30,8 +35,8 @@ export default function Home() {
         <aside className="hero-note" aria-label="Product principles">
           <span className="note-index">01 / 03</span>
           <p>No account required.</p>
-          <p>No resume stored on our servers.</p>
-          <p>Every match has a reason.</p>
+          <p>Students to experienced professionals.</p>
+          <p>Unknown eligibility is never guessed.</p>
         </aside>
       </section>
 
@@ -51,7 +56,7 @@ export default function Home() {
 
       <footer>
         <div className="footer-brand"><BrandLogo light /><p>Built for the search, not the scroll.</p></div>
-        <a href="#top">Back to top ↑</a>
+        <nav aria-label="Footer navigation"><a href="/jobs">Jobs</a><a href="/government-jobs">Government</a><a href="/exams-and-higher-studies">Exams</a><a href="/about">About</a><a href="/sources">Sources</a><a href="/methodology">Methodology</a><a href="/disclaimer">Disclaimer</a><a href="/privacy">Privacy</a><a href="mailto:akbsupportinfo@gmail.com">Support</a><a href="#top">Back to top ↑</a></nav>
       </footer>
     </main>
   );

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://veyra-pro.vercel.app"),
   applicationName: "VEYRA",
   title: { default: "VEYRA · Job intelligence, without the noise", template: "%s · VEYRA" },
-  description: "Search global opportunities, understand fit, and keep your job hunt private.",
+  description: "Search trustworthy jobs, government recruitment, PSU openings, exams and higher-study opportunities across India and global markets without creating an account.",
+  keywords: ["job search", "jobs in India", "fresher jobs", "remote jobs", "government jobs", "PSU recruitment", "BPSC jobs", "IOCL recruitment", "graduate jobs", "international jobs", "VEYRA"],
+  authors: [{ name: "VEYRA" }],
+  creator: "VEYRA",
+  publisher: "VEYRA",
+  category: "employment",
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
   icons: {
@@ -43,9 +50,19 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#18211d", colorScheme: "light" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "VEYRA",
+    url: "https://veyra-pro.vercel.app/",
+    description: "Privacy-first public job, recruitment and opportunity discovery.",
+    inLanguage: "en",
+    potentialAction: { "@type": "SearchAction", target: "https://veyra-pro.vercel.app/?q={search_term_string}#search", "query-input": "required name=search_term_string" },
+    publisher: { "@type": "Organization", name: "VEYRA", url: "https://veyra-pro.vercel.app/", email: "akbsupportinfo@gmail.com" }
+  };
   return (
     <html lang="en">
-      <body className={`${sans.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${sans.variable} ${mono.variable}`}><PwaRegister />{children}<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c") }} /></body>
     </html>
   );
 }

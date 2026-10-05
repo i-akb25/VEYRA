@@ -2,11 +2,11 @@
 
 import { ChangeEvent, FormEvent, useState } from "react";
 import { profileFromResume, readResume } from "@/lib/resume";
-import type { CandidateProfile } from "@/lib/types";
+import type { CandidateProfile, LocalProfile } from "@/lib/types";
 
-type Props = { profile: CandidateProfile; saved: boolean; onChange: (profile: CandidateProfile) => void; onSave: () => void; onUseForSearch: () => void; onDeleteData: () => void };
+type Props = { profile: CandidateProfile; profiles: LocalProfile[]; activeProfileId: string; saved: boolean; onChange: (profile: CandidateProfile) => void; onSave: () => void; onUseForSearch: () => void; onDeleteData: () => void; onSwitchProfile: (id: string) => void; onCreateProfile: () => void; onDeleteProfile: () => void };
 
-export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch, onDeleteData }: Props) {
+export function ResumeProfile({ profile, profiles, activeProfileId, saved, onChange, onSave, onUseForSearch, onDeleteData, onSwitchProfile, onCreateProfile, onDeleteProfile }: Props) {
   const [resumeState, setResumeState] = useState("");
 
   async function parseResume(event: ChangeEvent<HTMLInputElement>) {
@@ -30,6 +30,7 @@ export function ResumeProfile({ profile, saved, onChange, onSave, onUseForSearch
     <aside className="profile-panel" id="profile">
       <div className="panel-title"><span>Private profile</span><small className={saved ? "saved" : ""}>{saved ? "Saved locally ✓" : "Not saved"}</small></div>
       <p className="panel-copy">Upload a resume or enter details manually. Resume parsing happens inside this browser; the file is never sent to VEYRA.</p>
+      <div className="profile-switcher"><label><span>Career profile</span><select value={activeProfileId} onChange={(event) => onSwitchProfile(event.target.value)}>{profiles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><div><button type="button" onClick={onCreateProfile}>＋ New</button><button type="button" onClick={onDeleteProfile} disabled={profiles.length <= 1}>Delete</button></div></div>
       <label className="upload-control">
         <span>Parse resume locally</span>
         <input type="file" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={parseResume} />

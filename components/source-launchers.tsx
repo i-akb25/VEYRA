@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { employerRegistry, publicBoardUrl } from "@/lib/employers";
+import { employerDirectory } from "@/lib/employer-directory";
 import type { CareerBoard } from "@/lib/types";
 
 const portalSources = [
@@ -17,12 +18,21 @@ const portalSources = [
   { name: "SEEK", coverage: "Australia + NZ", note: "Regional jobs and classification filters", build: (q: string) => `https://www.seek.com.au/${encodeURIComponent(q.replaceAll(" ", "-"))}-jobs` },
   { name: "Reed", coverage: "United Kingdom", note: "UK roles, salary and sector filters", build: (q: string) => `https://www.reed.co.uk/jobs/${encodeURIComponent(q.replaceAll(" ", "-"))}-jobs` },
   { name: "StepStone", coverage: "Europe", note: "European employers and role discovery", build: (q: string) => `https://www.stepstone.de/jobs/${encodeURIComponent(q.replaceAll(" ", "-"))}` },
+  { name: "EURES", coverage: "European Union", note: "Official European employment network", build: () => "https://eures.europa.eu/jobseekers_en" },
+  { name: "USAJOBS", coverage: "United States government", note: "Official US federal employment portal", build: (q: string, l: string) => `https://www.usajobs.gov/Search/Results?k=${encodeURIComponent(q)}&l=${encodeURIComponent(l)}` },
+  { name: "NHS Jobs", coverage: "United Kingdom healthcare", note: "Official NHS clinical and non-clinical roles", build: (q: string) => `https://www.jobs.nhs.uk/candidate/search/results?keyword=${encodeURIComponent(q)}` },
+  { name: "Bayt", coverage: "Middle East", note: "UAE and wider MENA opportunities", build: (q: string) => `https://www.bayt.com/en/international/jobs/${encodeURIComponent(q.replaceAll(" ", "-"))}-jobs/` },
+  { name: "GulfTalent", coverage: "Gulf region", note: "Professional jobs across UAE and GCC markets", build: () => "https://www.gulftalent.com/jobs" },
+  { name: "JobStreet", coverage: "Southeast Asia", note: "Singapore, Malaysia, Philippines and regional roles", build: () => "https://www.jobstreet.com/" },
+  { name: "Handshake", coverage: "Students and graduates", note: "College careers and early-career opportunities", build: () => "https://joinhandshake.com/students/" },
+  { name: "TimesJobs", coverage: "India", note: "Cross-sector Indian job discovery", build: (q: string) => `https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&txtKeywords=${encodeURIComponent(q)}` },
   { name: "Google Jobs", coverage: "Global discovery", note: "Cross-site discovery in a new search", build: (q: string, l: string) => `https://www.google.com/search?q=${encodeURIComponent(`${q} jobs ${l}`)}` }
 ] as const;
 
 const governmentSources = [
   ["National Career Service", "https://www.ncs.gov.in/"], ["UPSC", "https://www.upsc.gov.in/recruitment/recruitment-advertisement"], ["SSC", "https://ssc.gov.in/"], ["BPSC", "https://bpsc.bihar.gov.in/"],
-  ["IBPS Banking", "https://www.ibps.in/"], ["Employment News", "https://employmentnews.gov.in/"], ["Indian Railways", "https://indianrailways.gov.in/"], ["Government vacancy directory", "https://www.ncs.gov.in/pages/govt-job-vacancies.aspx"]
+  ["IBPS Banking", "https://www.ibps.in/"], ["Employment News", "https://employmentnews.gov.in/"], ["Indian Railways", "https://indianrailways.gov.in/"], ["Government vacancy directory", "https://www.ncs.gov.in/pages/govt-job-vacancies.aspx"],
+  ["IOCL", "https://iocl.com/latest-job-opening"], ["ONGC", "https://ongcindia.com/web/eng/career/recruitment-notice"], ["NTPC", "https://careers.ntpc.co.in/"], ["BHEL", "https://careers.bhel.in/"], ["SAIL", "https://sailcareers.com/"], ["ISRO", "https://www.isro.gov.in/Careers.html"], ["DRDO", "https://www.drdo.gov.in/drdo/careers"], ["GATE", "https://gate2027.iitm.ac.in/"], ["NTA examinations", "https://exams.nta.ac.in/"]
 ] as const;
 
 const builtFeatures = [
@@ -58,9 +68,11 @@ export function SourceLaunchers({ query, location, boards, onBoardsChange }: Pro
       <div className="board-list">{boards.length === 0 && <p>No personal company career pages added yet.</p>}{boards.map((board) => <div key={board.id}><a href={board.url} target="_blank" rel="noopener noreferrer">{board.label} ↗</a><button onClick={() => onBoardsChange(boards.filter((item) => item.id !== board.id))}>Remove</button></div>)}</div>
     </section>
     <section className="source-section">
-      <p className="eyebrow">Phase 3 coverage</p><h3>{employerRegistry.length} curated employer feeds</h3>
-      <p>VEYRA automatically selects relevant employers from this registry for the chosen role and geography. It spans India and international engineering, commercial, creative and operations work.</p>
+      <p className="eyebrow">Public source coverage</p><h3>{employerRegistry.length} live feeds · {employerDirectory.length} official employer sources</h3>
+      <p>Live ATS feeds are searched automatically. The wider directory opens each employer’s official careers site without scraping it. Feed failures are isolated, cached and temporarily disabled after repeated errors.</p>
       <div className="employer-cloud">{employerRegistry.map((employer) => <a key={`${employer.provider}-${employer.slug}`} href={publicBoardUrl(employer)} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.provider} · {employer.regions.join(" + ")}</span></a>)}</div>
+      <details className="official-directory"><summary>Browse {employerDirectory.length} official employer career sites</summary><div className="employer-cloud">{employerDirectory.map((employer) => <a key={employer.name} href={employer.careersUrl} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.regions.join(" + ")} · {employer.industries.slice(0, 2).join(" + ")}</span></a>)}</div></details>
+      <p className="registry-contribute">Missing an employer? <a href="https://github.com/i-akb25/VEYRA/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Submit an official source through GitHub ↗</a></p>
     </section>
     <section className="source-section">
       <p className="eyebrow">Unified workspace</p><h3>What VEYRA replaces</h3>

@@ -8,3 +8,4 @@ coverage/
 .DS_Store
 .vercel/
 *.tsbuildinfo
+source-health-report.json
