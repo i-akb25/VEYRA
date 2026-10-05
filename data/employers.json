@@ -26,5 +26,17 @@
   { "name": "ServiceNow", "provider": "smartrecruiters", "slug": "ServiceNow", "regions": ["india", "international"], "categories": ["software", "data", "sales", "marketing", "management", "finance", "hr", "design", "operations", "support"] },
   { "name": "Glocal Healthcare", "provider": "smartrecruiters", "slug": "GHSPtL", "regions": ["india"], "categories": ["healthcare", "management", "operations", "support"] },
   { "name": "EVERSANA", "provider": "smartrecruiters", "slug": "EVERSANA1", "regions": ["india", "international"], "categories": ["healthcare", "sales", "marketing", "management", "operations", "support"] },
-  { "name": "Ambience Healthcare", "provider": "ashby", "slug": "ambiencehealthcare", "regions": ["international"], "categories": ["healthcare", "software", "data", "sales", "operations", "support"] }
+  { "name": "Ambience Healthcare", "provider": "ashby", "slug": "ambiencehealthcare", "regions": ["international"], "categories": ["healthcare", "software", "data", "sales", "operations", "support"] },
+  { "name": "Coursera", "provider": "greenhouse", "slug": "coursera", "regions": ["india", "international"], "categories": ["education", "software", "data", "sales", "marketing", "operations", "support"] },
+  { "name": "Duolingo", "provider": "greenhouse", "slug": "duolingo", "regions": ["international"], "categories": ["education", "software", "data", "marketing", "design", "operations", "support"] },
+  { "name": "Acumen", "provider": "greenhouse", "slug": "acumen", "regions": ["india", "international"], "categories": ["social", "finance", "operations", "administration", "marketing"] },
+  { "name": "Wikimedia Foundation", "provider": "greenhouse", "slug": "wikimedia", "regions": ["international"], "categories": ["social", "education", "software", "legal", "media", "finance", "hr", "operations"] },
+  { "name": "GiveDirectly", "provider": "greenhouse", "slug": "givedirectly", "regions": ["international"], "categories": ["social", "finance", "hr", "legal", "operations", "administration"] },
+  { "name": "Vox Media", "provider": "greenhouse", "slug": "voxmedia", "regions": ["international"], "categories": ["media", "marketing", "sales", "design", "legal", "finance", "operations"] },
+  { "name": "AECOM", "provider": "smartrecruiters", "slug": "AECOM2", "regions": ["india", "international"], "categories": ["construction", "electrical", "automation", "science", "management", "finance", "operations", "administration"] },
+  { "name": "Accor", "provider": "smartrecruiters", "slug": "Accor", "regions": ["india", "international"], "categories": ["hospitality", "sales", "marketing", "finance", "hr", "operations", "administration"] },
+  { "name": "JYSK", "provider": "smartrecruiters", "slug": "JYSK", "regions": ["international"], "categories": ["retail", "sales", "marketing", "finance", "hr", "operations", "administration"] },
+  { "name": "Turner & Townsend", "provider": "smartrecruiters", "slug": "TurnerTownsend", "regions": ["india", "international"], "categories": ["construction", "finance", "management", "operations", "administration"] },
+  { "name": "SGS", "provider": "smartrecruiters", "slug": "SGS", "regions": ["india", "international"], "categories": ["science", "agriculture", "construction", "trades", "healthcare", "operations", "administration"] },
+  { "name": "Eurofins", "provider": "smartrecruiters", "slug": "Eurofins", "regions": ["india", "international"], "categories": ["science", "healthcare", "agriculture", "trades", "data", "operations", "administration"] }
 ]

@@ -9,7 +9,7 @@ describe("employer registry", () => {
   });
 
   it("covers non-software role families", () => {
-    for (const category of ["sales", "marketing", "management", "finance", "hr", "design", "operations", "support", "healthcare"] as const) {
+    for (const category of ["sales", "marketing", "management", "finance", "hr", "design", "operations", "support", "healthcare", "education", "administration", "hospitality", "retail", "construction", "science", "legal", "media", "agriculture", "social"] as const) {
       expect(employerRegistry.some((item) => item.categories.includes(category))).toBe(true);
     }
   });

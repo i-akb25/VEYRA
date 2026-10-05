@@ -12,7 +12,7 @@ const endpoint = (item) => item.provider === "greenhouse"
 async function inspect(item) {
   const started = Date.now();
   try {
-    const response = await fetch(endpoint(item), { signal: AbortSignal.timeout(12_000), headers: { Accept: "application/json", "User-Agent": "VEYRA-source-health/1.0" } });
+    const response = await fetch(endpoint(item), { signal: AbortSignal.timeout(20_000), headers: { Accept: "application/json", "User-Agent": "VEYRA-source-health/1.0" } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const count = Array.isArray(data) ? data.length : Array.isArray(data.jobs) ? data.jobs.length : Array.isArray(data.content) ? data.content.length : 0;

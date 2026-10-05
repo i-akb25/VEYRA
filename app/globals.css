@@ -311,3 +311,60 @@ footer nav a:hover { color: white; }
 }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.inline-check { display: flex !important; flex-direction: row !important; align-items: center; gap: .55rem; min-height: 62px; padding: 0 .75rem; border: 1px solid var(--line); }
+.inline-check input { width: 18px; height: 18px; }
+.relevance-controls { flex-wrap: wrap; align-items: flex-end; }
+.relevance-controls label { flex: 1 1 180px; }
+.link-verifier { padding: 1.5rem; border-top: 1px solid var(--line); background: #f2eee5; }
+.link-verifier h3 { margin: .3rem 0 .6rem; font: 1.7rem Georgia, serif; }
+.link-verifier > div > p:not(.eyebrow), .verifier-caveat { max-width: 760px; color: var(--muted); font-size: .72rem; line-height: 1.55; }
+.link-verifier form { display: flex; gap: .7rem; align-items: flex-end; margin-top: 1rem; }
+.link-verifier form label { flex: 1; }
+.link-verifier input, .government-filters input, .government-filters select, .public-source-form input, .public-source-form textarea { width: 100%; padding: .75rem; border: 1px solid var(--line); background: var(--white); }
+.verification-result { margin-top: 1rem; padding: .9rem; border-left: 4px solid var(--muted); background: var(--white); }
+.verification-result.live { border-color: #2c6a47; }.verification-result.closed { border-color: #a54536; }
+.verification-result strong { text-transform: uppercase; font-size: .72rem; letter-spacing: .06em; }
+.verification-result p { margin: .35rem 0; }.verification-result small { color: var(--muted); }.verification-result a { display: block; margin-top: .6rem; color: var(--accent-dark); font-size: .72rem; }
+.government-filters { display: grid; grid-template-columns: 2fr 1fr; gap: .8rem; padding: 1rem 0; }
+.government-filters label, .public-source-form label { display: flex; flex-direction: column; gap: .35rem; }
+.government-filters span, .public-source-form span { font-size: .62rem; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+.official-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: .8rem; }
+.official-actions a { color: var(--accent-dark); font-size: .78rem; font-weight: 700; }
+.public-source-form { display: grid; gap: 1rem; margin: 1.2rem 0; }
+.public-source-form textarea { min-height: 120px; resize: vertical; }
+.install-prompt { position: fixed; z-index: 30; right: 1rem; bottom: 1rem; display: flex; align-items: center; gap: .8rem; max-width: 430px; padding: .8rem 1rem; color: var(--white); background: var(--ink); box-shadow: 0 12px 35px rgba(0,0,0,.22); }
+.install-prompt div { display: flex; flex-direction: column; gap: .2rem; }.install-prompt span { color: #bac4be; font-size: .68rem; }.install-prompt button { padding: .55rem .7rem; border: 1px solid rgba(255,255,255,.3); color: var(--white); background: transparent; cursor: pointer; }
+
+@media (max-width: 1180px) {
+  .workspace { padding-left: 3vw; padding-right: 3vw; }
+  .desk { grid-template-columns: minmax(250px, 31%) minmax(0, 1fr); }
+  .search-bar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .job-actions { align-items: flex-start; flex-direction: column; gap: .8rem; }
+  .job-actions > div { flex-wrap: wrap; }
+}
+
+@media (max-width: 760px) {
+  .search-bar { grid-template-columns: 1fr 1fr; }
+  .job-card { padding: 1.1rem; }
+  .job-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compare-table { grid-template-columns: repeat(4, minmax(220px, 1fr)); }
+  .government-filters { grid-template-columns: 1fr; }
+  .link-verifier form { align-items: stretch; flex-direction: column; }
+  .policy-page { padding-top: 2rem; }
+  .policy-page h1 { font-size: clamp(2.7rem, 12vw, 4.5rem); }
+  .landing-links a { min-height: 48px; }
+}
+
+@media (max-width: 560px) {
+  .search-bar { grid-template-columns: minmax(0, 1fr); }
+  .job-meta { grid-template-columns: 1fr; }
+  .job-actions > div { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .job-actions button, .tabs button, .exports button, .pagination button, .government-tabs button { min-height: 44px; }
+  .pagination { align-items: stretch; flex-direction: column; text-align: center; }
+  .pagination button { width: 100%; }
+  .government-card-head { flex-direction: column; }
+  .government-card dl { display: grid; grid-template-columns: 1fr; }
+  .install-prompt { left: .7rem; right: .7rem; bottom: .7rem; align-items: flex-start; }
+  .install-prompt div { flex: 1; }
+}

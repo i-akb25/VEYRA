@@ -2,7 +2,7 @@ import type { GovernmentOpportunity } from "./types";
 
 // Every record links directly to the issuing authority. Deadlines automatically
 // move expired notices out of the Open view; users must verify the official notice.
-export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
+const REVIEWED_GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
   {
     id: "upsc-ese-2027",
     category: "UPSC",
@@ -214,6 +214,21 @@ export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
     note: "Official DRDO careers index linking RAC and CEPTAM."
   },
   {
+    id: "ctet-official",
+    category: "Teaching",
+    title: "Central Teacher Eligibility Test (CTET)",
+    organization: "Central Board of Secondary Education",
+    notificationDate: "2026-10-05",
+    deadline: null,
+    qualification: "Teacher-training and academic qualifications vary by paper and current information bulletin.",
+    qualificationLevel: "undergraduate",
+    location: "India",
+    officialUrl: "https://ctet.nic.in/",
+    vacancies: "Eligibility examination, not a vacancy count",
+    ageLimit: "See the current official bulletin",
+    note: "CTET eligibility does not itself guarantee appointment. Recruitment is conducted separately by the relevant authority."
+  },
+  {
     id: "uppsc-current-notices",
     category: "State PSC",
     title: "Current recruitment notices and examinations",
@@ -322,3 +337,23 @@ export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
     note: "Private assessment platform. Verify current fees and hiring-program terms before registering."
   }
 ];
+
+function qualificationLevel(text: string): GovernmentOpportunity["qualificationLevel"] {
+  const value = text.toLowerCase();
+  if (/\b(10th|12th|matric|school)\b/.test(value)) return "school";
+  if (/\biti\b/.test(value)) return "iti";
+  if (/\bdiploma\b/.test(value)) return "diploma";
+  if (/\b(postgraduate|master|m\.tech|m\.sc|mba)\b/.test(value)) return "postgraduate";
+  if (/\b(phd|ph\.d|doctorate)\b/.test(value)) return "phd";
+  if (/\b(engineering degree|bachelor|graduate|degree)\b/.test(value)) return "undergraduate";
+  return "any";
+}
+
+export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = REVIEWED_GOVERNMENT_OPPORTUNITIES.map((item) => ({
+  vacancies: "Not stated in the indexed record",
+  ageLimit: "See the official notification",
+  verifiedAt: "2026-10-05",
+  corrections: [],
+  qualificationLevel: qualificationLevel(item.qualification),
+  ...item
+}));

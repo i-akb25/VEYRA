@@ -1,5 +1,5 @@
-const CACHE = "veyra-shell-v1";
-const SHELL = ["/", "/offline", "/manifest.webmanifest", "/brand/veyra-wordmark.svg", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE = "veyra-shell-v2";
+const SHELL = ["/", "/jobs", "/government-jobs", "/hi", "/offline", "/manifest.webmanifest", "/brand/veyra-wordmark.svg", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

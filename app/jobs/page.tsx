@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 const searches = [
   ["All jobs", "/?roles=custom&industry=any&scope=any&workplaces=any&experience=any#search"],
   ["Student and fresher jobs", "/?roles=get&industry=any&scope=any&workplaces=any&experience=fresher#search"],
+  ["Part-time jobs", "/?roles=custom&schedule=part-time&scope=any&workplaces=any&experience=any#search"],
   ["Healthcare jobs", "/?roles=healthcare&industry=healthcare&scope=any&workplaces=any&experience=any#search"],
   ["Sales and marketing jobs", "/?roles=sales%2Cmarketing&industry=any&scope=any&workplaces=any&experience=any#search"],
   ["Administration and clerical jobs", "/?roles=administration&industry=any&scope=any&workplaces=any&experience=any#search"],

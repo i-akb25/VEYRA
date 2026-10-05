@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa-register";
+import { PwaInstall } from "@/components/pwa-install";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -44,7 +45,8 @@ export const metadata: Metadata = {
     images: ["/social/og-default.png"]
   },
   appleWebApp: { capable: true, title: "VEYRA", statusBarStyle: "black-translucent" },
-  formatDetection: { telephone: false }
+  formatDetection: { telephone: false },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : undefined
 };
 
 export const viewport: Viewport = { themeColor: "#18211d", colorScheme: "light" };
@@ -62,7 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
   return (
     <html lang="en">
-      <body className={`${sans.variable} ${mono.variable}`}><PwaRegister />{children}<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c") }} /></body>
+      <body className={`${sans.variable} ${mono.variable}`}><PwaRegister /><PwaInstall />{children}<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c") }} /></body>
     </html>
   );
 }

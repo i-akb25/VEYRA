@@ -1,4 +1,4 @@
-export const JOB_SOURCES = ["Remotive", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "SmartRecruiters", "Company Careers"] as const;
+export const JOB_SOURCES = ["Remotive", "Arbeitnow", "Jobicy", "Himalayas", "Remote OK", "Greenhouse", "Lever", "Ashby", "SmartRecruiters", "Company Careers"] as const;
 export type JobSource = (typeof JOB_SOURCES)[number];
 export type ExperienceLevel = "fresher" | "entry" | "experienced" | "any";
 export type Freshness = "new" | "recent" | "older" | "unknown";
@@ -11,6 +11,8 @@ export type RemoteScope = "worldwide" | "country-restricted" | "not-remote" | "n
 export type EligibilityValue = "yes" | "no" | "not-stated";
 export type SortMode = "relevance" | "newest" | "salary" | "company";
 export type ResultLayout = "detailed" | "compact";
+export type SearchMode = "exact" | "balanced" | "broad";
+export type EmploymentSchedule = "any" | "full-time" | "part-time" | "contract" | "internship" | "temporary" | "volunteer";
 
 export type Job = {
   id: string;
@@ -46,6 +48,9 @@ export type Job = {
   relocation?: EligibilityValue;
   salaryCurrency?: string;
   lastCheckedAt?: string;
+  closesAt?: string;
+  liveStatus?: "live" | "closed" | "unknown";
+  liveStatusReason?: string;
 };
 
 export type SourceHealth = { name: string; status: "healthy" | "degraded" | "disabled"; count: number; message?: string; lastCheckedAt?: string; cached?: boolean };
@@ -109,9 +114,16 @@ export type SearchPreset = {
   qualification: Qualification;
   negativeKeywords: string;
   industry?: string;
+  specificRoles?: string[];
+  mode?: SearchMode;
+  schedule?: EmploymentSchedule;
+  requiredKeywords?: string;
+  optionalKeywords?: string;
+  relocation?: "any" | "yes" | "no";
+  includeNearby?: boolean;
 };
 
-export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "State PSC" | "Banking" | "Railway" | "Defence" | "PSU" | "Apprenticeship" | "Higher Studies" | "Private Exam";
+export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "State PSC" | "Banking" | "Railway" | "Defence" | "Teaching" | "PSU" | "Apprenticeship" | "Higher Studies" | "Private Exam";
 export type GovernmentOpportunity = {
   id: string;
   category: GovernmentCategory;
@@ -122,6 +134,12 @@ export type GovernmentOpportunity = {
   qualification: string;
   location: string;
   officialUrl: string;
+  officialPdfUrl?: string;
+  vacancies?: string;
+  ageLimit?: string;
+  qualificationLevel?: Qualification;
+  verifiedAt?: string;
+  corrections?: Array<{ date: string; note: string; url: string }>;
   note?: string;
 };
 

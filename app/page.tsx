@@ -1,5 +1,6 @@
 import { JobWorkspace } from "@/components/job-workspace";
 import { BrandLogo } from "@/components/brand-logo";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -9,12 +10,13 @@ export default function Home() {
         <a className="wordmark" href="#top" aria-label="VEYRA home"><BrandLogo priority /></a>
         <nav aria-label="Primary navigation">
           <a href="#search">Search</a>
-          <a href="/jobs">Jobs</a>
-          <a href="/government-jobs">Government</a>
-          <a href="/sources">Sources</a>
-          <a href="/methodology">Method</a>
-          <a href="/about">About</a>
-          <a href="/privacy">Privacy</a>
+          <Link href="/jobs">Jobs</Link>
+          <Link href="/government-jobs">Government</Link>
+          <Link href="/sources">Sources</Link>
+          <Link href="/methodology">Method</Link>
+          <Link href="/about">About</Link>
+          <Link href="/hi" lang="hi">हिंदी</Link>
+          <Link href="/privacy">Privacy</Link>
         </nav>
         <a className="header-cta" href="#search">Find roles</a>
       </header>
@@ -56,7 +58,7 @@ export default function Home() {
 
       <footer>
         <div className="footer-brand"><BrandLogo light /><p>Built for the search, not the scroll.</p></div>
-        <nav aria-label="Footer navigation"><a href="/jobs">Jobs</a><a href="/government-jobs">Government</a><a href="/exams-and-higher-studies">Exams</a><a href="/about">About</a><a href="/sources">Sources</a><a href="/methodology">Methodology</a><a href="/disclaimer">Disclaimer</a><a href="/privacy">Privacy</a><a href="mailto:akbsupportinfo@gmail.com">Support</a><a href="#top">Back to top ↑</a></nav>
+        <nav aria-label="Footer navigation"><Link href="/jobs">Jobs</Link><Link href="/government-jobs">Government</Link><Link href="/exams-and-higher-studies">Exams</Link><Link href="/about">About</Link><Link href="/sources">Sources</Link><Link href="/sources/submit">Suggest source</Link><Link href="/methodology">Methodology</Link><Link href="/hi" lang="hi">हिंदी</Link><Link href="/disclaimer">Disclaimer</Link><Link href="/privacy">Privacy</Link><a href="mailto:akbsupportinfo@gmail.com">Support</a><a href="#top">Back to top ↑</a></nav>
       </footer>
     </main>
   );
