@@ -4,3 +4,8 @@ packages:
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+
+# Mammoth's legacy CLI parser pulls an unpatched sprintf-js vulnerability.
+# argparse 2 retains the compatibility aliases and has no sprintf-js dependency.
+overrides:
+  "mammoth>argparse": "2.0.1"

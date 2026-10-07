@@ -4,6 +4,36 @@ import type { GovernmentOpportunity } from "./types";
 // move expired notices out of the Open view; users must verify the official notice.
 const REVIEWED_GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
   {
+    id: "kmscl-assistant-manager-it-2026", kind: "vacancy", category: "PSU",
+    title: "Assistant Manager (IT)", organization: "Kerala Medical Services Corporation Limited",
+    notificationDate: "2026-10-06", deadline: "2026-10-20T17:00:00+05:30", verifiedAt: "2026-10-06",
+    qualification: "B.Tech/BE Computer Science or MCA; minimum two years of relevant post-qualification experience.", qualificationLevels: ["btech", "undergraduate", "postgraduate"],
+    ageLimit: "40 years as on 1 October 2026; official relaxation rules apply", vacancies: "1", location: "Thiruvananthapuram, Kerala",
+    officialUrl: "https://cmd.kerala.gov.in/recruitment/kmscl-notification-for-recruitment-to-the-post-of-assistant-manager-it/",
+    officialPdfUrl: "https://cmd.kerala.gov.in/wp-content/uploads/2026/10/KMSCL-Assistant-Manager-Notification-V1.pdf",
+    note: "Contract appointment; monthly remuneration ₹33,600. Reviewed from the official notification."
+  },
+  {
+    id: "cmd-project-engineer-civil-2026", kind: "vacancy", category: "PSU",
+    title: "Project Engineer (Civil)", organization: "Centre for Management Development, Government of Kerala",
+    notificationDate: "2026-10-01", deadline: "2026-10-14T17:00:00+05:30", verifiedAt: "2026-10-06",
+    qualification: "Civil engineering graduation; minimum three years of construction experience. Relevant postgraduate qualification preferred.", qualificationLevels: ["btech", "undergraduate", "postgraduate"],
+    ageLimit: "30 years as on 1 October 2026", vacancies: "1", location: "Kerala",
+    officialUrl: "https://cmd.kerala.gov.in/recruitment/notification-for-recruitment-to-the-post-of-project-engineer-at-cmd/",
+    officialPdfUrl: "https://cmd.kerala.gov.in/wp-content/uploads/2026/10/Notification-Project-Engineer.pdf",
+    note: "One-year contract; remuneration ₹35,000–45,000. Apply by the email procedure specified in the PDF."
+  },
+  {
+    id: "kcb-accounts-officer-2026", kind: "vacancy", category: "PSU",
+    title: "Accounts Officer", organization: "Kerala Cashew Board Limited",
+    notificationDate: "2026-09-29", deadline: "2026-10-13T17:00:00+05:30", verifiedAt: "2026-10-06",
+    qualification: "CA/ICMA Inter with completed articleship and two years post-articleship experience, or M.Com with three years relevant post-qualification experience.", qualificationLevels: ["professional", "postgraduate"],
+    ageLimit: "Below 30 years as on 1 September 2026", vacancies: "1", location: "Kerala",
+    officialUrl: "https://cmd.kerala.gov.in/recruitment/recruitment-for-selection-to-the-post-of-accounts-officer-at-kerala-cashew-board-ltd/",
+    officialPdfUrl: "https://cmd.kerala.gov.in/wp-content/uploads/2026/09/29-09-2026-NOTIFICATION-KCB-AO-FINAL.pdf",
+    note: "11-month contract; remuneration ₹35,000 per month."
+  },
+  {
     id: "upsc-ese-2027",
     category: "UPSC",
     title: "Engineering Services (Preliminary) Examination, 2027",
@@ -63,12 +93,19 @@ const REVIEWED_GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = [
   },
   {
     id: "ksrtc-aee-electrical-2026",
+    kind: "vacancy",
+    verifiedAt: "2026-10-06",
+    officialPdfUrl: "https://cmd.kerala.gov.in/wp-content/uploads/2026/09/Notification-Final-CE-AE-v2.pdf",
+    vacancies: "1 (Electrical)",
+    ageLimit: "50 years as on 1 September 2026; see relaxation rules",
+    qualificationLevels: ["btech", "undergraduate"],
+    corrections: [{ date: "2026-10-06", note: "Indexed notification date corrected to 26 September; added PDF, vacancy count, age and minimum experience from the official notice.", url: "https://cmd.kerala.gov.in/wp-content/uploads/2026/09/Notification-Final-CE-AE-v2.pdf" }],
     category: "PSU",
     title: "Assistant Executive Engineer (Electrical)",
     organization: "Kerala State Road Transport Corporation",
-    notificationDate: "2026-09-25",
+    notificationDate: "2026-09-26",
     deadline: "2026-10-09T17:00:00+05:30",
-    qualification: "Electrical engineering qualification and experience as specified in the official notice.",
+    qualification: "B.Tech Electrical or recognised equivalent; at least 10 years of eligible electrical engineering experience. Not a fresher vacancy.",
     location: "Kerala",
     officialUrl: "https://cmd.kerala.gov.in/recruitment/recruitment-for-selection-to-the-posts-of-chief-engineer-projects-civil-works-and-assistant-executive-engineer-electrical-at-kerala-state-road-transport-corporation-ksrtc/"
   },
@@ -350,6 +387,7 @@ function qualificationLevel(text: string): GovernmentOpportunity["qualificationL
 }
 
 export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = REVIEWED_GOVERNMENT_OPPORTUNITIES.map((item) => ({
+  kind: item.deadline ? "vacancy" : ["Higher Studies", "Private Exam", "Teaching"].includes(item.category) ? "exam" : "directory",
   vacancies: "Not stated in the indexed record",
   ageLimit: "See the official notification",
   verifiedAt: "2026-10-05",
@@ -357,3 +395,10 @@ export const GOVERNMENT_OPPORTUNITIES: GovernmentOpportunity[] = REVIEWED_GOVERN
   qualificationLevel: qualificationLevel(item.qualification),
   ...item
 }));
+
+export function governmentStatus(item: GovernmentOpportunity, now = Date.now()): "closed" | "open" | "verify" | "directory" {
+  if (item.kind === "directory") return "directory";
+  if (item.deadline && Date.parse(item.deadline) < now) return "closed";
+  const recentlyReviewed = item.verifiedAt && now - Date.parse(item.verifiedAt) < 14 * 86_400_000;
+  return item.deadline && recentlyReviewed ? "open" : "verify";
+}

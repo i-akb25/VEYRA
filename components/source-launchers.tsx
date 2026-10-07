@@ -68,7 +68,7 @@ export function SourceLaunchers({ query, location, boards, onBoardsChange }: Pro
       <div className="board-list">{boards.length === 0 && <p>No personal company career pages added yet.</p>}{boards.map((board) => <div key={board.id}><a href={board.url} target="_blank" rel="noopener noreferrer">{board.label} ↗</a><button onClick={() => onBoardsChange(boards.filter((item) => item.id !== board.id))}>Remove</button></div>)}</div>
     </section>
     <section className="source-section">
-      <p className="eyebrow">Public source coverage</p><h3>{employerRegistry.length} live feeds · {employerDirectory.length} official employer sources</h3>
+      <p className="eyebrow">Public source coverage</p><h3>{employerRegistry.length} configured feeds · {employerDirectory.length} official employer sources</h3>
       <p>Live ATS feeds are searched automatically. The wider directory opens each employer’s official careers site without scraping it. Feed failures are isolated, cached and temporarily disabled after repeated errors.</p>
       <div className="employer-cloud">{employerRegistry.map((employer) => <a key={`${employer.provider}-${employer.slug}`} href={publicBoardUrl(employer)} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.provider} · {employer.regions.join(" + ")}</span></a>)}</div>
       <details className="official-directory"><summary>Browse {employerDirectory.length} official employer career sites</summary><div className="employer-cloud">{employerDirectory.map((employer) => <a key={employer.name} href={employer.careersUrl} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.regions.join(" + ")} · {employer.industries.slice(0, 2).join(" + ")}</span></a>)}</div></details>

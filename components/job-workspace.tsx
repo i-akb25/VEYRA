@@ -4,6 +4,9 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "re
 import { ApplicationWorkspace } from "./application-workspace";
 import { GovernmentDesk } from "./government-desk";
 import { JobLinkVerifier } from "./job-link-verifier";
+import { SearchFeedback } from "./search-feedback";
+import type { SearchDiagnostics } from "@/lib/search-quality";
+import { showLocalNotification } from "@/lib/reminders";
 import { ResumeProfile } from "./resume-profile";
 import { SourceLaunchers } from "./source-launchers";
 import { INDIA_LOCATION_GROUPS } from "@/lib/locations";
@@ -11,7 +14,7 @@ import { matchesExperienceFilter, scoreJob } from "@/lib/matching";
 import { OCCUPATION_ROLES } from "@/lib/occupations";
 import type { ApplicationRecord, ApplicationStatus, CandidateProfile, CareerBoard, EmploymentSchedule, ExperienceLevel, GeographyScope, Job, LocalBackup, LocalProfile, RoleCategory, SearchFilters, SearchMode, SearchPreset, SearchResponse, SourceHealth, WorkplaceMode } from "@/lib/types";
 
-const KEYS = { profile: "veyra.profile.v2", profiles: "veyra.profiles.v1", activeProfile: "veyra.active-profile.v1", saved: "veyra.saved-jobs.v2", applications: "veyra.applications.v1", boards: "veyra.career-boards.v1", seen: "veyra.seen-jobs.v1", presets: "veyra.search-presets.v1", hidden: "veyra.hidden-jobs.v1", recent: "veyra.recent-jobs.v1", reports: "veyra.job-reports.v1" };
+const KEYS = { profile: "veyra.profile.v2", profiles: "veyra.profiles.v1", activeProfile: "veyra.active-profile.v1", saved: "veyra.saved-jobs.v2", applications: "veyra.applications.v1", boards: "veyra.career-boards.v1", seen: "veyra.seen-jobs.v1", presets: "veyra.search-presets.v1", hidden: "veyra.hidden-jobs.v1", recent: "veyra.recent-jobs.v1", reports: "veyra.job-reports.v1", reminderEnabled: "veyra.reminders.enabled.v1", reminderSent: "veyra.reminders.sent.v1" };
 const emptyProfile: CandidateProfile = { role: "", skills: "", locations: "", experience: "", experienceLevel: "any", graduationYear: "", education: "", remoteOnly: false, recentGraduate: false };
 const emptyFilters: SearchFilters = { experienceLevel: "any", postedWithin: "any", company: "", source: "all", employmentType: "", minimumSalary: "", qualification: "any", sort: "relevance", layout: "detailed" };
 type View = "results" | "saved" | "applications" | "government" | "sources";
@@ -59,6 +62,8 @@ export function JobWorkspace() {
   const [hiddenJobIds, setHiddenJobIds] = useState<string[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [diagnostics, setDiagnostics] = useState<SearchDiagnostics | null>(null);
+  const [feedbackJob, setFeedbackJob] = useState<Job | null>(null);
   const [sources, setSources] = useState<string[]>([]);
   const [sourceHealth, setSourceHealth] = useState<SourceHealth[]>([]);
   const [filters, setFilters] = useState<SearchFilters>(emptyFilters);
@@ -153,12 +158,13 @@ export function JobWorkspace() {
       const response = await fetch(`/api/jobs/search?${params}`);
       if (!response.ok) { const body = await response.json().catch(() => ({})) as { error?: string }; throw new Error(body.error || "Search failed"); }
       const data = await response.json() as SearchResponse;
+      setDiagnostics(data.diagnostics ?? null);
       setJobs(data.jobs); setWarnings(data.warnings); setSources(data.sources); setSourceHealth(data.health ?? []); setHasSearched(true); setReferenceTime(Date.now()); setFetchedAt(data.fetchedAt); setCacheStatus(data.cache?.status ?? "miss"); setPage(1);
       const unseen = data.jobs.filter((job) => !seenJobIds.includes(job.id) && job.freshness === "new");
       setNewJobIds(unseen.map((job) => job.id));
       const updatedSeen = [...new Set([...seenJobIds, ...data.jobs.map((job) => job.id)])].slice(-1500);
       setSeenJobIds(updatedSeen); safeWrite(KEYS.seen, updatedSeen);
-      if (unseen.length && "Notification" in window && Notification.permission === "granted") new Notification(`VEYRA found ${unseen.length} new role${unseen.length === 1 ? "" : "s"}`, { body: unseen.slice(0, 2).map((job) => `${job.title} · ${job.company}`).join("\n") });
+      if (unseen.length && "Notification" in window && Notification.permission === "granted") await showLocalNotification(`VEYRA found ${unseen.length} new role${unseen.length === 1 ? "" : "s"}`, unseen.slice(0, 2).map((job) => `${job.title} · ${job.company}`).join("\n"));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "VEYRA could not reach the job sources. Check your connection and try again."); }
     finally { setLoading(false); }
   }
@@ -187,11 +193,8 @@ export function JobWorkspace() {
   }
 
   function reportJob(job: Job) {
-    const reports = safeRead<Array<{ id: string; reason: string; reportedAt: string }>>(KEYS.reports, []);
-    const reason = window.prompt("Why are you reporting this listing? Expired, duplicate, misleading, or another reason?")?.trim();
-    if (!reason) return;
-    safeWrite(KEYS.reports, [{ id: job.id, reason: reason.slice(0, 200), reportedAt: new Date().toISOString() }, ...reports].slice(0, 100));
-    setNotice("Report saved locally. VEYRA will also re-check live ATS listings when their source cache refreshes.");
+    setFeedbackJob(job);
+    requestAnimationFrame(() => document.querySelector("[data-search-feedback]")?.scrollIntoView({ behavior: "auto", block: "center" }));
   }
 
   function changeProfile(next: CandidateProfile) { setProfile(next); setProfileSaved(false); }
@@ -328,14 +331,25 @@ export function JobWorkspace() {
               <label><span>Sort</span><select value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value as SearchFilters["sort"] })}><option value="relevance">Relevance</option><option value="newest">Newest</option><option value="salary">Salary</option><option value="company">Company</option></select></label>
               <label><span>Layout</span><select value={filters.layout} onChange={(event) => setFilters({ ...filters, layout: event.target.value as SearchFilters["layout"] })}><option value="detailed">Detailed</option><option value="compact">Compact</option></select></label>
               <button onClick={enableNotifications}>Enable local alerts</button>
-              {filtersActive && <button className="clear-filters" onClick={() => setFilters(emptyFilters)}>Clear filters</button>}
+              {filtersActive && <button className="clear-filters" onClick={() => { setFilters(emptyFilters); setSelectedExperience(["any"]); }}>Clear filters</button>}
             </div>
             <div className="search-options relevance-controls"><label><span>Required keywords</span><input value={requiredKeywords} onChange={(event) => setRequiredKeywords(event.target.value)} placeholder="Excel, Hindi, B.Ed" maxLength={300} /></label><label><span>Helpful keywords</span><input value={optionalKeywords} onChange={(event) => setOptionalKeywords(event.target.value)} placeholder="remote, training, stipend" maxLength={300} /></label><label><span>Exclude keywords</span><input value={negativeKeywords} onChange={(event) => setNegativeKeywords(event.target.value)} placeholder="senior, commission only, 5+ years" maxLength={300} /></label><label><span>Relocation</span><select value={relocation} onChange={(event) => setRelocation(event.target.value as "any" | "yes" | "no")}><option value="any">Any / not stated</option><option value="yes">Relocation offered</option><option value="no">No relocation</option></select></label><p>Exact mode requires a selected title in the job title. Balanced mode prioritises titles. Broad mode can match descriptions.</p>{hiddenJobIds.length > 0 && <button onClick={clearHiddenJobs}>Show {hiddenJobIds.length} hidden</button>}</div>
             {sourceHealth.length > 0 && <details className="source-health"><summary>Source health · {sourceHealth.filter((item) => item.status === "healthy").length}/{sourceHealth.length} available · checked {fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : "now"} · cache {cacheStatus}</summary><div>{sourceHealth.map((item) => <span className={item.status} key={item.name}>{item.name}: {item.status} ({item.count}){item.cached ? " · cached" : ""}</span>)}</div></details>}
+            {diagnostics && <details className="source-health"><summary>Search coverage and filter diagnostics</summary><p>{diagnostics.gathered} candidates checked · {diagnostics.duplicatesRemoved} duplicates removed · {diagnostics.returned} matches · {diagnostics.employersSearched}/{diagnostics.employersAvailable} employer feeds searched.</p><p>First failing filter counts; a job is counted once.</p><ul>{Object.entries(diagnostics.removedBy).map(([reason, count]) => <li key={reason}>{reason}: {count}</li>)}</ul></details>}
+            {hasSearched && <SearchFeedback key={feedbackJob?.id ?? "search"} job={feedbackJob} onClose={feedbackJob ? () => setFeedbackJob(null) : undefined} />}
             {compareJobs.length > 0 && <CompareTray jobs={compareJobs} onRemove={(id) => setCompareJobs(compareJobs.filter((job) => job.id !== id))} />}
             {warnings.map((warning) => <p className="warning" key={warning}>{warning}</p>)}{error && <p className="error">{error}</p>}
             {!hasSearched && view === "results" && !loading && <div className="empty-state"><span>↳</span><h3>Your shortlist starts here.</h3><p>Run a search or add company career pages under Sources.</p></div>}
-            {hasSearched && view === "results" && !loading && visibleJobs.length === 0 && <div className="empty-state"><span>0</span><h3>{jobs.length ? `${jobs.length} found, but filters hid them.` : "No live matches found."}</h3><p>{jobs.length ? "Your search worked. Clear the result filters to see every role that was returned." : "Try a broader role or location, or add company career pages under Sources."}</p>{jobs.length > 0 && <button className="button primary" onClick={() => setFilters(emptyFilters)}>Show all {jobs.length} roles</button>}</div>}
+            {hasSearched && view === "results" && !loading && visibleJobs.length === 0 && <div className="empty-state"><span>0</span><h3>{jobs.length ? `${jobs.length} found, but result filters hid them.` : "No live matches found."}</h3><p>{jobs.length ? "Company, source, posting date, job type, salary, qualification, experience or hidden-listing filters excluded these results." : "The checked feeds did not contain a vacancy satisfying these rules. This does not mean no jobs exist elsewhere."}</p><div className="recovery-actions">
+              {jobs.length > 0 && <button onClick={() => { setFilters(emptyFilters); setSelectedExperience(["any"]); }}>Clear result filters</button>}
+              {location && !includeNearby && <button onClick={() => { setIncludeNearby(true); setNotice("Nearby cities enabled. Run Search to check this wider area."); }}>Include nearby cities</button>}
+              {location && <button onClick={() => { setLocation(""); setNotice("City filter cleared; your India/global scope is preserved. Run Search again."); }}>Search across selected region</button>}
+              {searchMode !== "broad" && <button onClick={() => { setSearchMode("broad"); setSelectedRoles([]); setNotice("Broader role discovery selected. Your region and fresher safety remain. Run Search again."); }}>Discover related titles</button>}
+              {!selectedExperience.includes("any") && <button onClick={() => { setSelectedExperience(["any"]); setFilters({ ...filters, experienceLevel: "any" }); setNotice("All experience levels selected. Senior jobs may now appear. Run Search again."); }}>Include all experience levels</button>}
+              {requiredKeywords && <button onClick={() => { setRequiredKeywords(""); setNotice("Required keyword rules cleared. Run Search again."); }}>Remove required keywords</button>}
+              {schedule !== "any" && <button onClick={() => { setSchedule("any"); setNotice("All job types selected. Run Search again."); }}>Include all job types</button>}
+            </div><p>Press Search after choosing a change to fetch updated matches.</p></div>}
+
             {view === "saved" && saved.length === 0 && <div className="empty-state"><span>♡</span><h3>No saved roles yet.</h3><p>Save roles from results. They stay only on this device.</p></div>}
             <div className={`job-list ${filters.layout}`}>{paginatedJobs.map((job) => <JobCard key={job.id} job={job} isNew={newJobIds.includes(job.id)} compared={compareJobs.some((item) => item.id === job.id)} saved={saved.some((item) => item.id === job.id)} tracked={applications.some((item) => item.job.id === job.id)} onSave={() => toggleSaved(job)} onTrack={() => track(job)} onHide={() => hideJob(job)} onOpen={() => openJob(job)} onCompare={() => toggleCompare(job)} onReport={() => reportJob(job)} />)}</div>
             {recentJobs.length > 0 && view === "results" && <details className="recent-jobs"><summary>Recently viewed on this device ({recentJobs.length})</summary><div>{recentJobs.slice(0, 6).map((job) => <a key={job.id} href={job.url} target="_blank" rel="noopener noreferrer">{job.title} · {job.company}</a>)}</div></details>}

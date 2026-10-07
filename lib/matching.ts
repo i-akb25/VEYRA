@@ -77,11 +77,27 @@ export function scoreJob(job: Job, profile: CandidateProfile): Job {
 export function deduplicateJobs(jobs: Job[]): Job[] {
   const unique = new Map<string, Job>();
   for (const job of jobs) {
-    const key = `${job.title}|${job.company}|${job.location}`.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const key = `${job.title}|${job.company}|${job.location}`.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
     const current = unique.get(key);
     if (!current || Date.parse(job.publishedAt || "0") > Date.parse(current.publishedAt || "0")) unique.set(key, job);
   }
-  return [...unique.values()];
+  const byUrl = new Map<string, Job>();
+  for (const job of unique.values()) {
+    const key = canonicalJobUrl(job.url) || job.id;
+    const current = byUrl.get(key);
+    if (!current || (Date.parse(job.publishedAt) || 0) > (Date.parse(current.publishedAt) || 0)) byUrl.set(key, job);
+  }
+  return [...byUrl.values()];
+}
+
+export function canonicalJobUrl(raw: string): string {
+  try {
+    const url = new URL(raw); url.hash = "";
+    for (const key of [...url.searchParams.keys()]) if (/^(utm_|gh_src$|lever-source$|referrer$|source$)/i.test(key)) url.searchParams.delete(key);
+    url.searchParams.sort();
+    url.pathname = url.pathname.replace(/\/$/, "") || "/";
+    return url.toString();
+  } catch { return ""; }
 }
 
 export function isSeniorRole(value: string): boolean {

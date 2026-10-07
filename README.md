@@ -28,7 +28,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Public job-link status checker with SSRF protection and honest live/closed/unknown outcomes
 - Negative keywords, qualification filtering, source-health reporting, pagination and local-data deletion
 - Best-effort in-memory API rate limiting for serverless deployments
-- 40-source live employer registry with India and international coverage across four public ATS providers
+- 107 configured employer feeds with India and international coverage across four public ATS providers; reachable empty feeds are distinguished from active vacancy coverage
 - Local saved search presets and locally hidden-result controls
 - Daily GitHub Actions source-health verification with downloadable reports
 - Safe launchers for major India, US, UK, European, Australian, startup and global job portals
@@ -63,6 +63,17 @@ pnpm lint
 pnpm test
 pnpm build
 ```
+
+Phase 9 adds real filter diagnostics, explicit city filtering, user-controlled
+empty-result recovery, local/public-preview search feedback, reviewed individual
+government PDFs and local deadline reminders. Existing resume, application,
+export, comparison, government, local and global features are retained.
+
+Run `pnpm verify:sources` for current feed availability and actual posting counts.
+Run `pnpm benchmark:search` against a running local app, or set
+`VEYRA_BENCHMARK_URL=https://veyra-pro.vercel.app` to check production. Benchmarks
+contain fixed public queries only. See [Phase 9 operations](docs/phase-9-operations.md)
+for review rules, source bounds, freshness and reminder limitations.
 
 `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Set it only when Google Search Console gives you an HTML-tag verification token. Search, resume parsing, local storage and every job source work without environment variables.
 

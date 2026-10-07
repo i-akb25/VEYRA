@@ -56,6 +56,7 @@ export type Job = {
 export type SourceHealth = { name: string; status: "healthy" | "degraded" | "disabled"; count: number; message?: string; lastCheckedAt?: string; cached?: boolean };
 
 export type SearchResponse = {
+  diagnostics?: import("./search-quality").SearchDiagnostics;
   jobs: Job[];
   fetchedAt: string;
   warnings: string[];
@@ -125,6 +126,8 @@ export type SearchPreset = {
 
 export type GovernmentCategory = "UPSC" | "SSC" | "BPSC" | "State PSC" | "Banking" | "Railway" | "Defence" | "Teaching" | "PSU" | "Apprenticeship" | "Higher Studies" | "Private Exam";
 export type GovernmentOpportunity = {
+  kind?: "vacancy" | "directory" | "exam";
+  qualificationLevels?: Qualification[];
   id: string;
   category: GovernmentCategory;
   title: string;

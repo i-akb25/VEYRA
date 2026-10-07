@@ -1,0 +1,31 @@
+name: Official government vacancy or correction
+description: Submit an individual official notification or corrigendum for reviewed inclusion.
+title: "[Official notice] "
+body:
+  - type: input
+    id: authority
+    attributes:
+      label: Issuing authority and post
+    validations:
+      required: true
+  - type: input
+    id: official_url
+    attributes:
+      label: Official notification page or PDF URL
+      description: Use the issuing authority, not a news site or copied notification.
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Details to review
+      description: Notification date, deadline with timezone, vacancies, qualification, age, location, and any official corrigendum. Leave unknown values unstated.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public submission
+      options:
+        - label: This contains no resume, government ID, account credentials, or personal application data.
+          required: true

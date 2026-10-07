@@ -9,3 +9,4 @@ coverage/
 .vercel/
 *.tsbuildinfo
 source-health-report.json
+search-quality-report.json

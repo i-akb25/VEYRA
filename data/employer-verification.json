@@ -1,0 +1,703 @@
+{
+  "checkedAt": "2026-10-06",
+  "method": "Official public ATS endpoints with titled postings and links. Observed counts are bounded samples, not total guaranteed active vacancies. Prior source audits retain their earlier timestamp.",
+  "sources": [
+    {
+      "provider": "greenhouse",
+      "slug": "stripe",
+      "observedPostings": 727,
+      "totalReported": 727,
+      "sampleTitle": "Abuse Investigator",
+      "sampleUrl": "https://stripe.com/jobs/search?gh_jid=8172510"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "airbnb",
+      "observedPostings": 160,
+      "totalReported": 160,
+      "sampleTitle": "Account Manager ",
+      "sampleUrl": "https://careers.airbnb.com/positions/8184174?gh_jid=8184174"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "twilio",
+      "observedPostings": 131,
+      "totalReported": 131,
+      "sampleTitle": "Account Executive 3",
+      "sampleUrl": "https://job-boards.greenhouse.io/twilio/jobs/8177722"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "okta",
+      "observedPostings": 376,
+      "totalReported": 376,
+      "sampleTitle": "Account Executive Auth0",
+      "sampleUrl": "https://www.okta.com/company/careers/opportunity/8079108?gh_jid=8079108"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "gitlab",
+      "observedPostings": 209,
+      "totalReported": 209,
+      "sampleTitle": "Account Executive - France",
+      "sampleUrl": "https://job-boards.greenhouse.io/gitlab/jobs/8860302002"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "elastic",
+      "observedPostings": 411,
+      "totalReported": 411,
+      "sampleTitle": "ABM Manager, Global Public Sector",
+      "sampleUrl": "https://jobs.elastic.co/jobs?gh_jid=8148720&gh_jid=8148720"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "sentinellabs",
+      "observedPostings": 259,
+      "totalReported": 259,
+      "sampleTitle": "Account Executive - Canada",
+      "sampleUrl": "https://www.sentinelone.com/jobs/?gh_jid=7994521003"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "samsara",
+      "observedPostings": 241,
+      "totalReported": 241,
+      "sampleTitle": "Account Development Representative - Canada",
+      "sampleUrl": "https://www.samsara.com/company/careers/roles/8207928?gh_jid=8207928"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "toast",
+      "observedPostings": 326,
+      "totalReported": 326,
+      "sampleTitle": "AI Operations Lead, Toast IQ ",
+      "sampleUrl": "https://careers.toasttab.com/jobs?gh_jid=8054004"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "asana",
+      "observedPostings": 96,
+      "totalReported": 96,
+      "sampleTitle": "Administrative Business Partner",
+      "sampleUrl": "https://www.asana.com/jobs/apply/8165477?gh_jid=8165477"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "dropbox",
+      "observedPostings": 35,
+      "totalReported": 35,
+      "sampleTitle": "Account Executive",
+      "sampleUrl": "https://jobs.dropbox.com/listing/8159652?gh_jid=8159652"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "discord",
+      "observedPostings": 48,
+      "totalReported": 48,
+      "sampleTitle": "Commercial Policy Lead",
+      "sampleUrl": "https://job-boards.greenhouse.io/discord/jobs/8806482002"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "roblox",
+      "observedPostings": 260,
+      "totalReported": 260,
+      "sampleTitle": "[2027] Associate Product Designer, Early Career",
+      "sampleUrl": "https://careers.roblox.com/jobs/8143982?gh_jid=8143982"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "redventures",
+      "observedPostings": 61,
+      "totalReported": 61,
+      "sampleTitle": "2027 Early Career: Associate Product Manager, AI - NYC",
+      "sampleUrl": "https://www.redventures.com/careers/positions/open?gh_jid=8121430"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "instacart",
+      "observedPostings": 122,
+      "totalReported": 122,
+      "sampleTitle": "Account Manager",
+      "sampleUrl": "https://instacart.careers/job/?gh_jid=8250324"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "affirm",
+      "observedPostings": 187,
+      "totalReported": 187,
+      "sampleTitle": "Administrative Assistant IV",
+      "sampleUrl": "https://job-boards.greenhouse.io/affirm/jobs/7850544003"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "brex",
+      "observedPostings": 287,
+      "totalReported": 287,
+      "sampleTitle": "Accountant Partnerships Manager",
+      "sampleUrl": "https://www.brex.com/careers/8871800002?gh_jid=8871800002"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "chime",
+      "observedPostings": 65,
+      "totalReported": 65,
+      "sampleTitle": "AI/ML Engineer",
+      "sampleUrl": "https://boards.greenhouse.io/chime/jobs/8569366002?gh_jid=8569366002"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "gusto",
+      "observedPostings": 95,
+      "totalReported": 95,
+      "sampleTitle": "Account Coordinator (Retirement Sponsor Support)",
+      "sampleUrl": "https://job-boards.greenhouse.io/gusto/jobs/8143038"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "slice",
+      "observedPostings": 29,
+      "totalReported": 29,
+      "sampleTitle": "Account Management Team Lead",
+      "sampleUrl": "https://slice.careers/careers-listing?gh_jid=8203842"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "groww",
+      "observedPostings": 7,
+      "totalReported": 7,
+      "sampleTitle": "Assistant Manager - Internal Audit",
+      "sampleUrl": "https://job-boards.eu.greenhouse.io/groww/jobs/4970739101"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "hackerrank",
+      "observedPostings": 28,
+      "totalReported": 28,
+      "sampleTitle": "Account Executive - Strategic",
+      "sampleUrl": "https://job-boards.greenhouse.io/hackerrank/jobs/7567121"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "rubrik",
+      "observedPostings": 128,
+      "totalReported": 131,
+      "sampleTitle": "Account Executive",
+      "sampleUrl": "https://www.rubrik.com/company/careers/departments/job.7820794?gh_jid=7820794"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "canonical",
+      "observedPostings": 311,
+      "totalReported": 311,
+      "sampleTitle": "Accountant",
+      "sampleUrl": "https://job-boards.greenhouse.io/canonical/jobs/5569916"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "khanacademy",
+      "observedPostings": 7,
+      "totalReported": 7,
+      "sampleTitle": "Bilingual Content Creator, Khan Academy Kids (24 months fixed-term)",
+      "sampleUrl": "https://job-boards.greenhouse.io/khanacademy/jobs/8204881"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "udemy",
+      "observedPostings": 8,
+      "totalReported": 9,
+      "sampleTitle": "Large Enterprise Account Executive, LATAM",
+      "sampleUrl": "https://app.careerpuck.com/job-board/udemy/job/4739285004?gh_jid=4739285004"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "gofundme",
+      "observedPostings": 23,
+      "totalReported": 23,
+      "sampleTitle": "AI Specialist, Masters or PHD Emerging Talent (LATAM, 2027)",
+      "sampleUrl": "https://job-boards.greenhouse.io/gofundme/jobs/8080372"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "modernhealth",
+      "observedPostings": 7,
+      "totalReported": 9,
+      "sampleTitle": "Engagement Marketing Strategist",
+      "sampleUrl": "https://job-boards.greenhouse.io/modernhealth/jobs/5988719002"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "ritual",
+      "observedPostings": 14,
+      "totalReported": 15,
+      "sampleTitle": "Controller",
+      "sampleUrl": "https://job-boards.greenhouse.io/ritual/jobs/4981486007"
+    },
+    {
+      "provider": "lever",
+      "slug": "mindtickle",
+      "observedPostings": 19,
+      "totalReported": 19,
+      "sampleTitle": "Account Executive, Commercial [NAMER]",
+      "sampleUrl": "https://jobs.lever.co/mindtickle/203fff0a-f8cc-48cf-bc6f-fcd97a469674"
+    },
+    {
+      "provider": "lever",
+      "slug": "zoox",
+      "observedPostings": 234,
+      "totalReported": 234,
+      "sampleTitle": "Administrative Business Partner, Floater",
+      "sampleUrl": "https://jobs.lever.co/zoox/e8a190f0-7a89-4c11-a6a0-452ff6234749"
+    },
+    {
+      "provider": "lever",
+      "slug": "sophos",
+      "observedPostings": 85,
+      "totalReported": 85,
+      "sampleTitle": "Channel Account Executive (via 3rd party)",
+      "sampleUrl": "https://jobs.lever.co/sophos/bce7305e-6689-492c-b021-d0c6690883e0"
+    },
+    {
+      "provider": "lever",
+      "slug": "lalamove",
+      "observedPostings": 181,
+      "totalReported": 181,
+      "sampleTitle": "(Senior) Analyst, Operational Risk",
+      "sampleUrl": "https://jobs.lever.co/lalamove/44418df0-8b49-457c-90eb-5ce81e3bd32d"
+    },
+    {
+      "provider": "lever",
+      "slug": "aircall",
+      "observedPostings": 77,
+      "totalReported": 77,
+      "sampleTitle": "Account Executive - Small Business",
+      "sampleUrl": "https://jobs.lever.co/aircall/f2ab14ed-0258-4dc6-bd52-c96eb7d968e5"
+    },
+    {
+      "provider": "lever",
+      "slug": "binance",
+      "observedPostings": 302,
+      "totalReported": 302,
+      "sampleTitle": "Affiliate BD - Greater China",
+      "sampleUrl": "https://jobs.lever.co/binance/0cb402ad-7715-4127-ad25-14ab4b142983"
+    },
+    {
+      "provider": "lever",
+      "slug": "includedhealth",
+      "observedPostings": 53,
+      "totalReported": 53,
+      "sampleTitle": "Associate Clinical Director, Integrated Care Quality (NP/MD)",
+      "sampleUrl": "https://jobs.lever.co/includedhealth/c12583e4-994e-4ffd-baaf-76e0fed1f1fe"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "MinorInternational",
+      "observedPostings": 100,
+      "totalReported": 146,
+      "sampleTitle": "Food & Beverage Attendant",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/MinorInternational/postings/744000153662300"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Sodexo",
+      "observedPostings": 100,
+      "totalReported": 162,
+      "sampleTitle": "Project Manager & Executive Assistant | Mon to Fri 38 hours | Balcatta Support Centre ",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Sodexo/postings/744000153656879"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Aramark",
+      "observedPostings": 100,
+      "totalReported": 183,
+      "sampleTitle": "Chef de Partie",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Aramark/postings/3743990015910896"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Sutherland",
+      "observedPostings": 100,
+      "totalReported": 406,
+      "sampleTitle": "Technical Support Engineer L1",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Sutherland/postings/744000153855748"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Experian",
+      "observedPostings": 100,
+      "totalReported": 395,
+      "sampleTitle": "Engenheiro de Software III",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Experian/postings/744000153854239"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "WesternDigital",
+      "observedPostings": 100,
+      "totalReported": 334,
+      "sampleTitle": "Senior Manager, Strategic Communications - CEO and Strategy",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/WesternDigital/postings/744000153847036"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Continental",
+      "observedPostings": 100,
+      "totalReported": 593,
+      "sampleTitle": "Cutting / Slitting Machine Operator",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Continental/postings/744000153852729"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AveryDennison",
+      "observedPostings": 100,
+      "totalReported": 483,
+      "sampleTitle": "Industrial Maintenance Technician",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/AveryDennison/postings/744000153845459"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Konecranes",
+      "observedPostings": 100,
+      "totalReported": 385,
+      "sampleTitle": "Application Engineer - Electrical - New Berlin, WI.",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Konecranes/postings/744000153840727"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AbbVie",
+      "observedPostings": 98,
+      "totalReported": 1866,
+      "sampleTitle": "Principal Engineer",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/AbbVie/postings/3743990015934076"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "KIPP",
+      "observedPostings": 100,
+      "totalReported": 476,
+      "sampleTitle": "Adaptive Physical Education Teacher",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/KIPP/postings/744000153848980"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SNV",
+      "observedPostings": 7,
+      "totalReported": 7,
+      "sampleTitle": "Communications Intern",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/SNV/postings/744000153124445"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Entain",
+      "observedPostings": 100,
+      "totalReported": 288,
+      "sampleTitle": "Senior Internal Communications Channels Manager",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Entain/postings/744000153822750"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "McDonaldsCorporation",
+      "observedPostings": 4,
+      "totalReported": 4,
+      "sampleTitle": "Franchisee UK & Ireland",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/McDonaldsCorporation/postings/744000120624847"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Dominos",
+      "observedPostings": 100,
+      "totalReported": 24870,
+      "sampleTitle": "Delivery Driver (Carroll)",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Dominos/postings/744000153852833"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "razorpaysoftwareprivatelimited",
+      "observedPostings": 25,
+      "totalReported": 25,
+      "sampleTitle": "Analyst, Financial Operations",
+      "sampleUrl": "https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4740498005"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "grafanalabs",
+      "observedPostings": 135,
+      "totalReported": 135,
+      "sampleTitle": "Commercial Account Executive, Acquisition | Remote | Italy",
+      "sampleUrl": "https://job-boards.greenhouse.io/grafanalabs/jobs/6116479004"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "doordashusa",
+      "observedPostings": 465,
+      "totalReported": 465,
+      "sampleTitle": "Account Executive",
+      "sampleUrl": "https://job-boards.greenhouse.io/doordashusa/jobs/7858932"
+    },
+    {
+      "provider": "greenhouse",
+      "slug": "oscar",
+      "observedPostings": 259,
+      "totalReported": 260,
+      "sampleTitle": "1099 Supervising Physician - APP Supervision",
+      "sampleUrl": "https://job-boards.greenhouse.io/oscar/jobs/8229714"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AccorHotel",
+      "observedPostings": 100,
+      "totalReported": 6375,
+      "sampleTitle": "Oriental pastry chef",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/AccorHotel/postings/744000153856719"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "HMGroup",
+      "observedPostings": 100,
+      "totalReported": 1917,
+      "sampleTitle": "People Relations Specialist - 6 Month Project Assignment",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/HMGroup/postings/744000153856789"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "DrReddysLaboratoriesLimited",
+      "observedPostings": 84,
+      "totalReported": 84,
+      "sampleTitle": "Team Member - Engineering (Calibration)",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/DrReddysLaboratoriesLimited/postings/744000153800451"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SopraSteria1",
+      "observedPostings": 100,
+      "totalReported": 2068,
+      "sampleTitle": "Stage - Ingénieur/Ingénieure logiciel & Intégration",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/SopraSteria1/postings/744000153801278"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "VeoliaEnvironnementSA",
+      "observedPostings": 100,
+      "totalReported": 2804,
+      "sampleTitle": "Empleate con Veolia - Guajira",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/VeoliaEnvironnementSA/postings/744000153856660"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Ramboll3",
+      "observedPostings": 100,
+      "totalReported": 1017,
+      "sampleTitle": "Program Manager, Mission Critical Commissioning",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Ramboll3/postings/744000153854629"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AFRY",
+      "observedPostings": 100,
+      "totalReported": 978,
+      "sampleTitle": "Head of Sales, Industry Norway",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/AFRY/postings/744000153755856"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SikaAG",
+      "observedPostings": 100,
+      "totalReported": 700,
+      "sampleTitle": "Shuttle Driver",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/SikaAG/postings/744000153853279"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Freshworks",
+      "observedPostings": 100,
+      "totalReported": 124,
+      "sampleTitle": "Commercial Sales Director",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Freshworks/postings/744000153837479"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Colliers",
+      "observedPostings": 99,
+      "totalReported": 99,
+      "sampleTitle": "Senior Recruiter",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Colliers/postings/744000153093279"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Assystem",
+      "observedPostings": 100,
+      "totalReported": 1001,
+      "sampleTitle": "Ingénieur Instrumentation H/F",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Assystem/postings/744000153806307"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Vattenfall",
+      "observedPostings": 100,
+      "totalReported": 287,
+      "sampleTitle": "Koordinierende Verantwortliche Elektrofachkraft (kVEFK) & Managementsysteme (w/m/d)",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Vattenfall/postings/744000153807637"
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Wise",
+      "observedPostings": 100,
+      "totalReported": 405,
+      "sampleTitle": "Partner Operations Manager",
+      "sampleUrl": "https://api.smartrecruiters.com/v1/companies/Wise/postings/744000153856019"
+    }
+  ],
+  "indiaCountryFilterChecks": [
+    {
+      "provider": "smartrecruiters",
+      "slug": "BoschGroup",
+      "indiaPostings": 552
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Ubisoft2",
+      "indiaPostings": 6
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "NielsenIQ",
+      "indiaPostings": 70
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "ServiceNow",
+      "indiaPostings": 76
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "GHSPtL",
+      "indiaPostings": 40
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "EVERSANA1",
+      "indiaPostings": 31
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AECOM2",
+      "indiaPostings": 346
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AccorHotel",
+      "indiaPostings": 752
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "TurnerTownsend",
+      "indiaPostings": 153
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SGS",
+      "indiaPostings": 23
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Eurofins",
+      "indiaPostings": 343
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Sutherland",
+      "indiaPostings": 52
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Experian",
+      "indiaPostings": 37
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "WesternDigital",
+      "indiaPostings": 1
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Continental",
+      "indiaPostings": 10
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AveryDennison",
+      "indiaPostings": 33
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Konecranes",
+      "indiaPostings": 62
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AbbVie",
+      "indiaPostings": 20
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Entain",
+      "indiaPostings": 4
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "HMGroup",
+      "indiaPostings": 116
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "DrReddysLaboratoriesLimited",
+      "indiaPostings": 47
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SopraSteria1",
+      "indiaPostings": 79
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "VeoliaEnvironnementSA",
+      "indiaPostings": 72
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Ramboll3",
+      "indiaPostings": 104
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "AFRY",
+      "indiaPostings": 30
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "SikaAG",
+      "indiaPostings": 60
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Freshworks",
+      "indiaPostings": 31
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Assystem",
+      "indiaPostings": 196
+    },
+    {
+      "provider": "smartrecruiters",
+      "slug": "Wise",
+      "indiaPostings": 32
+    }
+  ],
+  "latestFullAudit": {
+    "checkedAt": "2026-10-06T20:45:54.774Z",
+    "healthy": 107,
+    "active": 104,
+    "total": 107
+  }
+}

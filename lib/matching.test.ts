@@ -36,6 +36,14 @@ it("deduplicates equivalent listings", () => {
   expect(deduplicateJobs([job, { ...job, id: "2" }])).toHaveLength(1);
 });
 
+it("deduplicates the same posting URL despite title, location or tracking differences", () => {
+  expect(deduplicateJobs([{ ...job, url: "https://jobs.example.com/123?utm_source=feed" }, { ...job, id: "2", title: "Alternate title", location: "Worldwide", url: "https://jobs.example.com/123" }])).toHaveLength(1);
+});
+
+it("preserves distinct job identifiers carried in query parameters", () => {
+  expect(deduplicateJobs([{ ...job, url: "https://jobs.example.com/apply?jobId=1" }, { ...job, id: "2", title: "Different role", url: "https://jobs.example.com/apply?jobId=2" }])).toHaveLength(2);
+});
+
 it("includes entry-level jobs in fresher searches", () => {
   expect(matchesExperienceFilter("fresher", "fresher")).toBe(true);
   expect(matchesExperienceFilter("fresher", "entry")).toBe(true);

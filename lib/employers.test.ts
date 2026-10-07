@@ -3,6 +3,11 @@ import { employerRegistry, employersForSearch, publicBoardUrl } from "./employer
 import { employerDirectory } from "./employer-directory";
 
 describe("employer registry", () => {
+  it("has at least 100 distinct verified ATS employers, separately from portal links", () => {
+    expect(employerRegistry.length).toBeGreaterThanOrEqual(100);
+    expect(new Set(employerRegistry.map((item) => item.name.toLowerCase())).size).toBe(employerRegistry.length);
+    expect(employerRegistry.filter((item) => item.verifiedAt && (item.verifiedJobCount ?? 0) > 0).length).toBeGreaterThanOrEqual(100);
+  });
   it("covers India and international searches", () => {
     expect(employersForSearch("sales", "india").some((item) => item.regions.includes("india"))).toBe(true);
     expect(employersForSearch("sales", "international").every((item) => item.regions.includes("international"))).toBe(true);

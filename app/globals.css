@@ -131,6 +131,11 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .source-health > div { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }
 .source-health span { padding: .35rem .5rem; border: 1px solid var(--line); }
 .source-health span.healthy { color: #2c6a47; }.source-health span.degraded { color: #963e28; }
+.feedback-panel, .deadline-reminders { padding: 1rem; line-height: 1.6; }
+.feedback-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; max-width: 100%; }
+.feedback-panel button, .deadline-reminders button, .recovery-actions button { min-height: 44px; padding: .55rem .85rem; margin: .25rem; }
+.recovery-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; }
+.deadline-reminders ul { padding-left: 1.3rem; overflow-wrap: anywhere; }
 .source-health span.disabled { color: #765529; }
 .empty-state { min-height: 490px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; }
 .empty-state > span { color: var(--accent); font: 2rem var(--font-mono); }

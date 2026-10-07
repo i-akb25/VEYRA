@@ -1,0 +1,12 @@
+[
+  { "name": "Office assistant Delhi NCR", "params": { "q": "office assistant", "category": "administration", "roles": "office-administrator", "location": "Delhi NCR", "scope": "india" }, "titlePattern": "office|administrat|assistant|secretar|reception" },
+  { "name": "Teacher Lucknow", "params": { "q": "teacher", "category": "education", "roles": "teacher", "location": "Lucknow", "scope": "india" }, "titlePattern": "teacher|faculty|lecturer|tutor|trainer|education|school|curriculum" },
+  { "name": "Electrical trainee India", "params": { "q": "electrical trainee", "category": "electrical", "scope": "india", "experience": "fresher", "mode": "broad" }, "titlePattern": "electrical|electronics|power|maintenance|energy|hardware|trainee|graduate" },
+  { "name": "Part-time remote global", "params": { "category": "custom", "schedule": "part-time", "workplace": "remote", "scope": "any" } },
+  { "name": "Hospitality India", "params": { "category": "hospitality", "scope": "india" }, "titlePattern": "hotel|chef|restaurant|front office|food|beverage|guest|reservation|housekeep|hospitality" },
+  { "name": "Healthcare global", "params": { "category": "healthcare", "scope": "international" }, "titlePattern": "clinical|medical|nurs|health|pharma|physician|patient|therapy|therapist" },
+  { "name": "Sales India entry-level", "params": { "category": "sales", "scope": "india", "experience": "entry" }, "titlePattern": "sales|account executive|business development|customer success|partnership|revenue" },
+  { "name": "Remote marketing global", "params": { "category": "marketing", "scope": "any", "workplace": "remote" }, "titlePattern": "marketing|growth|brand|content|seo|communications|demand generation" },
+  { "name": "Skilled trades India", "params": { "category": "trades", "scope": "india" }, "titlePattern": "technician|electrician|welder|fitter|machinist|operator|mechanic" },
+  { "name": "Education international", "params": { "category": "education", "scope": "international" }, "titlePattern": "teacher|faculty|lecturer|professor|academic|education|school|curriculum|tutor|trainer" }
+]

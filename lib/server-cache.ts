@@ -1,21 +1,34 @@
-type CacheEntry<T> = { value: T; expiresAt: number; storedAt: number };
+type CacheEntry<T> = { value: T; expiresAt: number; storedAt: number; bytes: number };
 type Circuit = { failures: number; openUntil: number };
 
 const cache = new Map<string, CacheEntry<unknown>>();
 const inflight = new Map<string, Promise<unknown>>();
 const circuits = new Map<string, Circuit>();
+const MAX_CACHE_ENTRIES = 160;
+const MAX_CACHE_BYTES = 64 * 1024 * 1024;
+let cacheBytes = 0;
+
+function removeEntry(key: string) { const entry = cache.get(key); if (entry) cacheBytes -= entry.bytes; cache.delete(key); }
+function pruneCache(now: number) { for (const [key, entry] of cache) if (entry.expiresAt <= now) removeEntry(key); }
 
 export const FEED_TTL_MS = 20 * 60 * 1000;
 export const SEARCH_TTL_MS = 5 * 60 * 1000;
 
 export async function cached<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<{ value: T; cached: boolean; checkedAt: string }> {
   const now = Date.now();
+  pruneCache(now);
   const existing = cache.get(key) as CacheEntry<T> | undefined;
-  if (existing && existing.expiresAt > now) return { value: existing.value, cached: true, checkedAt: new Date(existing.storedAt).toISOString() };
+  if (existing && existing.expiresAt > now) { cache.delete(key); cache.set(key, existing); return { value: existing.value, cached: true, checkedAt: new Date(existing.storedAt).toISOString() }; }
   const pending = inflight.get(key) as Promise<T> | undefined;
   if (pending) return { value: await pending, cached: true, checkedAt: new Date().toISOString() };
   const task = loader().then((value) => {
-    cache.set(key, { value, storedAt: Date.now(), expiresAt: Date.now() + ttlMs });
+    const bytes = Buffer.byteLength(JSON.stringify(value) ?? "");
+    pruneCache(Date.now());
+    if (bytes <= MAX_CACHE_BYTES) {
+      removeEntry(key);
+      while (cache.size && (cache.size >= MAX_CACHE_ENTRIES || cacheBytes + bytes > MAX_CACHE_BYTES)) removeEntry(cache.keys().next().value!);
+      cache.set(key, { value, bytes, storedAt: Date.now(), expiresAt: Date.now() + ttlMs }); cacheBytes += bytes;
+    }
     return value;
   }).finally(() => inflight.delete(key));
   inflight.set(key, task);

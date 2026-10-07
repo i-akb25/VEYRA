@@ -29,5 +29,7 @@ export const INDIA_LOCATION_GROUPS: LocationGroup[] = [
 export const locationTerms = (value: string): string[] => {
   const wanted = value.toLowerCase().trim();
   const group = INDIA_LOCATION_GROUPS.find((item) => item.id === wanted || item.label.toLowerCase() === wanted || item.cities.some((city) => city.toLowerCase() === wanted));
-  return group ? [...group.cities, group.state ?? ""].filter(Boolean).map((item) => item.toLowerCase()) : value.split(/[,;]/).map((item) => item.trim().toLowerCase()).filter(Boolean);
+  if (group) return group.cities.map((item) => item.toLowerCase());
+  const stateGroups = INDIA_LOCATION_GROUPS.filter((item) => item.state?.toLowerCase() === wanted);
+  return stateGroups.length ? [...new Set([wanted, ...stateGroups.flatMap((item) => item.cities.map((city) => city.toLowerCase()))])] : value.split(/[,;]/).map((item) => item.trim().toLowerCase()).filter(Boolean);
 };

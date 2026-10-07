@@ -1,4 +1,4 @@
-const CACHE = "veyra-shell-v2";
+const CACHE = "veyra-shell-v3";
 const SHELL = ["/", "/jobs", "/government-jobs", "/hi", "/offline", "/manifest.webmanifest", "/brand/veyra-wordmark.svg", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {

@@ -33,3 +33,23 @@ jobs:
             source-health-report.json
             source-health.log
           retention-days: 30
+
+  benchmark-public-search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Measure fixed local and global searches
+        env:
+          VEYRA_BENCHMARK_URL: https://veyra-pro.vercel.app
+        run: node scripts/benchmark-search.mjs
+      - name: Upload public benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: search-quality-${{ github.run_id }}
+          path: search-quality-report.json
+          retention-days: 30

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ApplicationRecord, ApplicationStatus } from "@/lib/types";
+import { DeadlineReminders } from "./deadline-reminders";
 
 const statuses: Array<[ApplicationStatus, string]> = [["saved", "Saved"], ["applied", "Applied"], ["interview", "Interview"], ["rejected", "Rejected"], ["offer", "Offer"]];
 
@@ -10,6 +11,7 @@ export function ApplicationWorkspace({ records, activeStatus, onStatusChange, on
   const visible = records.filter((record) => record.status === activeStatus);
   return (
     <div className="applications-view">
+      <DeadlineReminders records={records} />
       <div className="pipeline-tabs">{statuses.map(([status, label]) => <button key={status} className={activeStatus === status ? "active" : ""} onClick={() => onStatusChange(status)}>{label}<span>{records.filter((record) => record.status === status).length}</span></button>)}</div>
       {visible.length === 0 && <div className="empty-state compact"><span>○</span><h3>No roles in {activeStatus}.</h3><p>Move jobs into this stage from search results or another application record.</p></div>}
       <div className="application-list">{visible.map((record) => <article key={record.id} className="application-card">
