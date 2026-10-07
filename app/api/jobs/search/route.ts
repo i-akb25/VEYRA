@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { curatedJobs } from "@/lib/curated-jobs";
+import { matchesSchedule } from "@/lib/employment";
+import { requestLimit } from "@/lib/shared-store";
 import { extractEligibility } from "@/lib/eligibility";
 import { employersForSearch, type BoardProvider, type EmployerSource } from "@/lib/employers";
 import { locationTerms } from "@/lib/locations";
 import { deduplicateJobs, extractSalary, getFreshness, inferExperience, isSeniorRole, tokens } from "@/lib/matching";
 import { occupationPhrases } from "@/lib/occupations";
 import { filterWithDiagnostics, matchesRequestedLocation } from "@/lib/search-quality";
-import { employerRegistry } from "@/lib/employers";
+import { currentEmployerRegistry } from "@/lib/employer-store";
 import { cached, circuitOpen, FEED_TTL_MS, mapConcurrent, recordFailure, recordSuccess, SEARCH_TTL_MS } from "@/lib/server-cache";
-import type { GeographyScope, Job, JobSource, Qualification, RoleCategory, SearchResponse, SourceHealth, WorkplaceMode } from "@/lib/types";
+import type { GeographyScope, Job, JobSource, EmploymentSchedule, Qualification, RoleCategory, SearchResponse, SourceHealth, WorkplaceMode } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -23,13 +25,12 @@ const searchSchema = z.object({
   location: z.string().trim().max(160).default(""), scope: z.enum(["india", "international", "any"]).default("any"),
   workplace: z.enum(["any", "remote", "hybrid", "onsite"]).default("any"), workplaces: z.string().max(100).default(""), remote: z.enum(["true", "false"]).optional(),
   experience: z.enum(["fresher", "entry", "experienced", "any"]).default("any"), qualification: z.enum(["any", "school", "iti", "diploma", "undergraduate", "btech", "postgraduate", "phd", "professional"]).default("any"),
-  schedule: z.enum(["any", "full-time", "part-time", "contract", "internship", "temporary", "volunteer"]).default("any"), relocation: z.enum(["any", "yes", "no"]).default("any"), nearby: z.enum(["true", "false"]).default("true"),
+  schedule: z.enum(["any", "full-time", "part-time", "contract", "internship", "apprenticeship", "temporary", "volunteer", "not-stated"]).default("any"), relocation: z.enum(["any", "yes", "no"]).default("any"), nearby: z.enum(["true", "false"]).default("true"),
+  sourcePage: z.coerce.number().int().min(0).max(100).default(0),
   negative: z.string().trim().max(300).default(""), boards: z.string().max(4000).default("")
 });
 
 const RATE_LIMIT = 40;
-const WINDOW_MS = 60_000;
-const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 const aliases: Record<RoleCategory, string[]> = {
   custom: [], software: ["software engineer", "software developer", "frontend", "backend", "full stack", "sde", "mobile engineer", "devops"],
   electrical: ["electrical engineer", "electrical design", "power systems", "maintenance engineer", "electronics engineer"], automation: ["automation engineer", "control engineer", "plc", "scada", "instrumentation", "mechatronics"],
@@ -78,14 +79,18 @@ function finish(job: Omit<Job, "experienceLevel" | "freshness" | "salaryText" | 
   const base: Job = { ...job, remote: workplace === "remote", workplace, url: safeUrl(job.url), experienceLevel: inferExperience(context), freshness: getFreshness(job.publishedAt), salaryText: extractSalary(context) };
   return { liveStatus: "live", liveStatusReason: "Present in the source's current public feed.", ...base, ...extractEligibility(base) };
 }
-async function fetchJson(url: string, timeout = 7000): Promise<unknown> {
-  let lastError: unknown;
-  for (let attempt = 0; attempt < 2; attempt += 1) try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(timeout), cache: "no-store", headers: { Accept: "application/json", "User-Agent": "VEYRA/2.0 public-job-discovery" } });
-    if (!response.ok) throw new Error(`Source returned ${response.status}`); return response.json();
-  } catch (error) { lastError = error; }
-  throw lastError;
+async function fetchJson(url: string, timeout = 4500): Promise<unknown> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(Math.min(timeout, 4500)), cache: "no-store", headers: { Accept: "application/json", "User-Agent": "VEYRA/2.0 public-job-discovery" } });
+    if (response.ok) return await response.json();
+    // Retry temporary upstream server errors only. Timeouts, 404s and rate limits
+    // should not repeatedly block every other employer behind the same worker.
+    if (attempt === 0 && [500, 502, 503, 504].includes(response.status)) { await response.body?.cancel(); continue; }
+    throw new Error(`Source returned ${response.status}`);
+  }
+  throw new Error("Source unavailable");
 }
+
 async function remotive(): Promise<Job[]> { const data = await fetchJson("https://remotive.com/api/remote-jobs?limit=100") as { jobs?: Array<Record<string, unknown>> }; return (data.jobs ?? []).map((item) => finish({ id: `remotive-${String(item.id)}`, title: String(item.title ?? "Untitled role"), company: String(item.company_name ?? "Unknown company"), location: String(item.candidate_required_location ?? "Remote"), remote: true, workplace: "remote", source: "Remotive", url: String(item.url ?? ""), publishedAt: String(item.publication_date ?? ""), description: clean(String(item.description ?? "")), tags: stringArray(item.tags), employmentType: String(item.job_type ?? "") })); }
 async function arbeitnow(): Promise<Job[]> { const data = await fetchJson("https://www.arbeitnow.com/api/job-board-api") as { data?: Array<Record<string, unknown>> }; return (data.data ?? []).map((item) => finish({ id: `arbeitnow-${String(item.slug)}`, title: String(item.title ?? "Untitled role"), company: String(item.company_name ?? "Unknown company"), location: String(item.location ?? "Not specified"), remote: Boolean(item.remote), source: "Arbeitnow", url: String(item.url ?? ""), publishedAt: item.created_at ? new Date(Number(item.created_at) * 1000).toISOString() : "", description: clean(String(item.description ?? "")), tags: stringArray(item.tags), employmentType: stringArray(item.job_types).join(", ") })); }
 async function jobicy(): Promise<Job[]> { const data = await fetchJson("https://jobicy.com/api/v2/remote-jobs?count=200", 10_000) as { jobs?: Array<Record<string, unknown>> }; return (data.jobs ?? []).map((item) => { const salary = item.salaryMin || item.salaryMax ? `${String(item.salaryCurrency ?? "")} ${String(item.salaryMin ?? "")}–${String(item.salaryMax ?? "")} ${String(item.salaryPeriod ?? "")}`.trim() : ""; return { ...finish({ id: `jobicy-${String(item.id)}`, title: String(item.jobTitle ?? "Untitled role"), company: String(item.companyName ?? "Unknown company"), location: String(item.jobGeo ?? "Remote"), remote: true, workplace: "remote", source: "Jobicy", url: String(item.url ?? ""), publishedAt: String(item.pubDate ?? ""), description: clean(String(item.jobDescription ?? item.jobExcerpt ?? "")), tags: stringArray(item.jobIndustry), employmentType: stringArray(item.jobType).join(", ") }), salaryText: salary || undefined, salaryCurrency: String(item.salaryCurrency ?? "") || undefined, liveStatus: "live" as const, liveStatusReason: "Present in Jobicy's current public feed." }; }); }
@@ -116,7 +121,7 @@ function locationScore(job: Job, requested: string, scope: GeographyScope, nearb
 function locationFit(job: Job, requested: string, scope: GeographyScope, nearby: boolean): Job["locationFit"] { const place = job.location.toLowerCase(); const terms = requestedLocations(requested, nearby); if (terms.length && terms.some((term) => place.includes(term))) return "exact"; if (isWorldwideRemote(job)) return "global-remote"; if (scope === "india" && isIndia(job)) return "india-fallback"; if (scope === "international" && !isIndia(job)) return "international"; return "anywhere"; }
 function relevance(job: Job, q: string, categories: RoleCategory[], rolePhrases: string[], mode: "exact" | "balanced" | "broad", optional: string): number { const title = job.title.toLowerCase(); const body = `${job.description} ${job.tags.join(" ")}`.toLowerCase(); const queryTokens = tokens(`${q} ${optional}`); const phrases = categories.flatMap((category) => aliases[category]).concat(rolePhrases, q.toLowerCase()).filter(Boolean); let score = phrases.some((phrase) => title.includes(phrase)) ? 110 : 0; score += queryTokens.filter((term) => title.includes(term)).length * 45; score += queryTokens.filter((term) => body.includes(term)).length * (mode === "broad" ? 10 : 4); if (categories.some((category) => category !== "custom" && aliases[category].some((phrase) => title.includes(phrase) || (mode === "broad" && body.includes(phrase))))) score += 35; return score; }
 function categoryMatches(job: Job, categories: RoleCategory[]): boolean { if (!categories.length || categories.includes("custom") || categories.includes("remote") || job.source === "Company Careers") return true; return categories.some((category) => categoryTitlePatterns[category]?.test(job.title)); }
-function allowRequest(request: NextRequest): boolean { const key = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous"; const now = Date.now(); const bucket = rateBuckets.get(key); if (rateBuckets.size > 10_000) for (const [storedKey, stored] of rateBuckets) if (stored.resetAt <= now) rateBuckets.delete(storedKey); if (!bucket || bucket.resetAt <= now) { rateBuckets.set(key, { count: 1, resetAt: now + WINDOW_MS }); return true; } if (bucket.count >= RATE_LIMIT) return false; bucket.count += 1; return true; }
+
 
 async function executeSearch(input: z.infer<typeof searchSchema>): Promise<SearchResponse> {
   const { q, location, scope, experience, qualification, negative, boards, industry, mode, required, optional, schedule, relocation } = input;
@@ -124,8 +129,9 @@ async function executeSearch(input: z.infer<typeof searchSchema>): Promise<Searc
   const selectedRolePhrases = occupationPhrases(input.roles.split(",").filter(Boolean));
   const workplaces = (input.workplaces ? input.workplaces.split(",") : [input.remote === "true" ? "remote" : input.workplace]).filter((item): item is WorkplaceMode => ["any", "remote", "hybrid", "onsite"].includes(item));
   const userTargets = boards.split("\n").map((url) => parseBoard(url.trim())).filter((target): target is BoardTarget => Boolean(target));
-  const registryTargets = categories.flatMap((category) => employersForSearch(category, scope, 24, q));
-  const targets = [...new Map([...userTargets, ...registryTargets].map((target) => [`${target.provider}:${target.slug}`, target])).values()].slice(0, 36);
+  const registry = await currentEmployerRegistry();
+  const registryTargets = categories.flatMap((category) => employersForSearch(category, scope, 24, [q, ...selectedRolePhrases].join(" "), location, input.sourcePage, registry));
+  const targets = [...new Map([...userTargets, ...registryTargets].map((target) => [`${target.provider}:${target.slug}`, target])).values()].slice(0, 24);
   const tasks: SourceTask[] = [
     { name: "Remotive", source: "Remotive", key: "feed:remotive", load: remotive }, { name: "Arbeitnow", source: "Arbeitnow", key: "feed:arbeitnow", load: arbeitnow },
     { name: "Jobicy", source: "Jobicy", key: "feed:jobicy", ttl: 60 * 60 * 1000, load: jobicy }, { name: "Himalayas", source: "Himalayas", key: "feed:himalayas", load: himalayas }, { name: "Remote OK", source: "Remote OK", key: "feed:remoteok", load: remoteOk },
@@ -143,9 +149,9 @@ async function executeSearch(input: z.infer<typeof searchSchema>): Promise<Searc
   if (curated.length) health.push({ name: "Curated official company careers", status: "healthy", count: curated.length, lastCheckedAt: checkedAt, cached: true });
   const gathered = [...outcomes.flatMap((result) => result.jobs), ...curated];
   const unique = deduplicateJobs(gathered);
-  const ranked = unique.map((job) => { const context = `${job.title} ${job.company} ${job.description} ${job.tags.join(" ")}`.toLowerCase(); const roleScore = relevance(job, q, categories, selectedRolePhrases, mode, optional); const roleMatchScore = job.source === "Company Careers" ? Math.max(80, roleScore) : roleScore; const industryBoost = industryTerms[industry].some((term) => context.includes(term)) ? 35 : 0; const fit = locationFit(job, location, scope, input.nearby === "true"); const reasons = [roleScore >= 100 ? "Role title matches" : roleScore >= 45 ? "Relevant title or skills" : "Broader description match", fit === "exact" ? "Requested location or nearby cluster" : fit === "global-remote" ? "Worldwide remote" : fit === "india-fallback" ? "India-based" : fit === "international" ? "International market" : "Location unrestricted", job.freshness === "new" ? "Recently posted" : "", job.employmentType ? `${job.employmentType}` : ""].filter(Boolean); return { ...job, roleMatchScore, relevanceScore: roleMatchScore + industryBoost + locationScore(job, location, scope, input.nearby === "true") + (job.freshness === "new" ? 8 : job.freshness === "recent" ? 4 : 0), matchReasons: reasons, qualification: job.qualification === "Not stated" ? qualificationWords.find((term) => context.includes(term)) ?? "Not stated" : job.qualification, locationFit: fit, lastCheckedAt: checkedAt }; });
+  const ranked = unique.map((job) => { const context = `${job.title} ${job.company} ${job.description} ${job.tags.join(" ")}`.toLowerCase(); const roleScore = relevance(job, q, categories, selectedRolePhrases, mode, optional); const roleMatchScore = roleScore; const industryBoost = industryTerms[industry].some((term) => context.includes(term)) ? 35 : 0; const fit = locationFit(job, location, scope, input.nearby === "true"); const reasons = [roleScore >= 100 ? "Role title matches" : roleScore >= 45 ? "Relevant title or skills" : "Broader description match", fit === "exact" ? "Requested location or nearby cluster" : fit === "global-remote" ? "Worldwide remote" : fit === "india-fallback" ? "India-based" : fit === "international" ? "International market" : "Location unrestricted", job.freshness === "new" ? "Recently posted" : "", job.employmentType ? `${job.employmentType}` : ""].filter(Boolean); return { ...job, roleMatchScore, relevanceScore: roleMatchScore + industryBoost + locationScore(job, location, scope, input.nearby === "true") + (job.freshness === "new" ? 8 : job.freshness === "recent" ? 4 : 0), matchReasons: reasons, qualification: job.qualification === "Not stated" ? qualificationWords.find((term) => context.includes(term)) ?? "Not stated" : job.qualification, locationFit: fit, lastCheckedAt: job.source === "Company Careers" ? job.verifiedAt : checkedAt }; });
   const context = (job: Job) => `${job.title} ${job.description} ${job.tags.join(" ")}`.toLowerCase();
-  const scheduleTerms: Record<string, string[]> = { "full-time": ["full time", "full-time", "permanent"], "part-time": ["part time", "part-time", "parttime"], contract: ["contract", "contractor", "freelance"], internship: ["intern", "internship"], temporary: ["temporary", "temp", "seasonal"], volunteer: ["volunteer"] };
+
   const threshold = mode === "exact" ? 80 : mode === "broad" ? 25 : 45;
   const { accepted, removedBy } = filterWithDiagnostics<Job>(ranked, [
     ["Closed or invalid listing", (job) => Boolean(job.url) && job.liveStatus !== "closed"],
@@ -157,21 +163,22 @@ async function executeSearch(input: z.infer<typeof searchSchema>): Promise<Searc
     ["Excluded keywords", (job) => !negatives.some((term) => job.title.toLowerCase().includes(term))],
     ["Required keywords", (job) => requiredTerms.every((term) => context(job).includes(term))],
     ["Exact title", (job) => mode !== "exact" || !(q || selectedRolePhrases.length) || [q.toLowerCase(), ...selectedRolePhrases].filter(Boolean).some((phrase) => job.title.toLowerCase().includes(phrase))],
-    ["Job type", (job) => schedule === "any" || scheduleTerms[schedule].some((term) => `${job.employmentType ?? ""} ${job.title}`.toLowerCase().replaceAll("_", "-").includes(term))],
+    ["Job type", (job) => matchesSchedule(job, schedule as EmploymentSchedule)],
     ["Relocation", (job) => relocation === "any" || job.relocation === relocation],
     ["Experience / fresher safety", (job) => !((experience === "fresher" || experience === "entry") && (isSeniorRole(job.title) || /\b(?:[3-9]|1[0-9])\+?\s*years?\b/i.test(job.description.slice(0, 700)) || job.experienceLevel === "experienced"))],
     ["Qualification not matched / not stated", (job) => !qualificationWords.length || qualificationWords.some((term) => context(job).includes(term))]
   ]);
   const jobs = accepted.sort((a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0) || Date.parse(b.publishedAt || "0") - Date.parse(a.publishedAt || "0")).slice(0, 500);
-  const diagnostics = { gathered: gathered.length, duplicatesRemoved: gathered.length - unique.length, returned: jobs.length, removedBy, employersSearched: targets.length, employersAvailable: employerRegistry.length };
+  const diagnostics = { gathered: gathered.length, duplicatesRemoved: gathered.length - unique.length, returned: jobs.length, removedBy, employersSearched: targets.length, employersAvailable: registry.length, sourcePage: input.sourcePage, hasMoreEmployers: registryTargets.length >= 24 };
 
   return { jobs, diagnostics, fetchedAt: checkedAt, warnings, sources: [...new Set(tasks.map((task) => task.source).concat(curated.length ? ["Company Careers"] : []))], health, cache: { status: "miss", maxAgeSeconds: SEARCH_TTL_MS / 1000 } };
 }
 
 export async function GET(request: NextRequest) {
-  if (!allowRequest(request)) return NextResponse.json({ error: "Too many searches. Wait one minute and try again." }, { status: 429, headers: { "Retry-After": "60" } });
+  const rate = await requestLimit(request.headers, "search", RATE_LIMIT);
+  if (!rate.allowed) return NextResponse.json({ error: rate.unavailable ? "Search protection is temporarily unavailable. Try again shortly." : "Too many searches. Try again shortly." }, { status: rate.unavailable ? 503 : 429, headers: { "Retry-After": String(rate.retryAfter), "Cache-Control": "no-store" } });
   const parsed = searchSchema.safeParse(Object.fromEntries(request.nextUrl.searchParams)); if (!parsed.success) return NextResponse.json({ error: "Invalid search parameters" }, { status: 400 });
-  const cacheKey = `search:${new URLSearchParams(Object.entries(parsed.data).filter(([, value]) => value !== "").sort(([a], [b]) => a.localeCompare(b))).toString()}`;
+  const cacheKey = `search:${new URLSearchParams(Object.entries(parsed.data).filter(([, value]) => value !== "").sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, String(value)])).toString()}`;
   const result = await cached(cacheKey, SEARCH_TTL_MS, () => executeSearch(parsed.data));
-  return NextResponse.json({ ...result.value, cache: { status: result.cached ? "hit" : "miss", maxAgeSeconds: SEARCH_TTL_MS / 1000 } }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900", "X-RateLimit-Limit": String(RATE_LIMIT), "X-VEYRA-Cache": result.cached ? "HIT" : "MISS" } });
+  return NextResponse.json({ ...result.value, cache: { status: result.cached ? "hit" : "miss", maxAgeSeconds: SEARCH_TTL_MS / 1000 } }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900", "X-RateLimit-Limit": String(RATE_LIMIT), "X-VEYRA-RateLimit": rate.mode, "X-VEYRA-Cache": result.cached ? "HIT" : "MISS" } });
 }

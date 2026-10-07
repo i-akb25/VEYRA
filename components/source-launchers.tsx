@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { employerRegistry, publicBoardUrl } from "@/lib/employers";
+import { FormEvent, useEffect, useState } from "react";
 import { employerDirectory } from "@/lib/employer-directory";
 import type { CareerBoard } from "@/lib/types";
 
@@ -44,10 +43,27 @@ const builtFeatures = [
   ["Original applications", "Every application opens the employer or platform page so eligibility can be verified."]
 ] as const;
 
+type Coverage = { employers: Array<{ name: string; provider: string; slug: string; url: string; regions: string[]; verifiedAt?: string; vacancySample: number; disabled: boolean }>; total: number; page: number; pageSize: number; stats: { configured: number; activeAtLastCheck: number; disabled: number; candidates: number } };
 type Props = { query: string; location: string; boards: CareerBoard[]; onBoardsChange: (boards: CareerBoard[]) => void };
 
 export function SourceLaunchers({ query, location, boards, onBoardsChange }: Props) {
   const [url, setUrl] = useState(""); const [message, setMessage] = useState("");
+
+  const [coverage, setCoverage] = useState<Coverage>();
+  const [coverageQuery, setCoverageQuery] = useState("");
+  const [coverageError, setCoverageError] = useState("");
+  const [coverageLoading, setCoverageLoading] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/sources").then((response) => { if (!response.ok) throw new Error(); return response.json(); }).then((data: Coverage) => { if (active) setCoverage(data); }).catch(() => { if (active) setCoverageError("Source directory unavailable. Your other tools remain available."); });
+    return () => { active = false; };
+  }, []);
+  async function loadCoverage(page = 0) {
+    setCoverageLoading(true); setCoverageError("");
+    try { const response = await fetch(`/api/sources?${new URLSearchParams({ q: coverageQuery, page: String(page) })}`); if (!response.ok) throw new Error(); setCoverage(await response.json() as Coverage); }
+    catch { setCoverageError("Could not load the source directory. Try again."); }
+    finally { setCoverageLoading(false); }
+  }
 
   function addBoard(event: FormEvent) {
     event.preventDefault();
@@ -68,9 +84,13 @@ export function SourceLaunchers({ query, location, boards, onBoardsChange }: Pro
       <div className="board-list">{boards.length === 0 && <p>No personal company career pages added yet.</p>}{boards.map((board) => <div key={board.id}><a href={board.url} target="_blank" rel="noopener noreferrer">{board.label} ↗</a><button onClick={() => onBoardsChange(boards.filter((item) => item.id !== board.id))}>Remove</button></div>)}</div>
     </section>
     <section className="source-section">
-      <p className="eyebrow">Public source coverage</p><h3>{employerRegistry.length} configured feeds · {employerDirectory.length} official employer sources</h3>
+      <p className="eyebrow">Public source coverage</p><h3>{coverage ? `${coverage.stats.configured} configured feeds` : "Employer feed directory"} · {employerDirectory.length} official employer sources</h3>
       <p>Live ATS feeds are searched automatically. The wider directory opens each employer’s official careers site without scraping it. Feed failures are isolated, cached and temporarily disabled after repeated errors.</p>
-      <div className="employer-cloud">{employerRegistry.map((employer) => <a key={`${employer.provider}-${employer.slug}`} href={publicBoardUrl(employer)} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.provider} · {employer.regions.join(" + ")}</span></a>)}</div>
+      {coverage && <p>{coverage.stats.activeAtLastCheck} boards returned vacancies at their last check; {coverage.stats.disabled} temporarily disabled. {coverage.stats.candidates} discovery candidates are checked on a daily schedule. Board counts do not guarantee jobs for every city or role.</p>}
+      <form className="board-form" onSubmit={(event) => { event.preventDefault(); void loadCoverage(); }}><label><span>Find an employer feed</span><input value={coverageQuery} onChange={(event) => setCoverageQuery(event.target.value)} placeholder="Name, role family or city" /></label><button disabled={coverageLoading}>Find feeds</button></form>
+      {coverageError && <p role="status">{coverageError}</p>}
+      <div className="employer-cloud">{coverage?.employers.map((employer) => <a key={`${employer.provider}-${employer.slug}`} href={employer.url} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.provider} · {employer.regions.join(" + ")} · {employer.disabled ? "Temporarily disabled" : `${employer.vacancySample} sampled vacancies`} · Checked {employer.verifiedAt ? new Date(employer.verifiedAt).toLocaleDateString() : "Not stated"}</span></a>)}</div>
+      {coverage && <nav className="pagination" aria-label="Employer feed pages"><button disabled={coverageLoading || coverage.page === 0} onClick={() => void loadCoverage(coverage.page - 1)}>Previous</button><span>{coverage.total} matching boards · Page {coverage.page + 1}</span><button disabled={coverageLoading || (coverage.page + 1) * coverage.pageSize >= coverage.total} onClick={() => void loadCoverage(coverage.page + 1)}>Next</button></nav>}
       <details className="official-directory"><summary>Browse {employerDirectory.length} official employer career sites</summary><div className="employer-cloud">{employerDirectory.map((employer) => <a key={employer.name} href={employer.careersUrl} target="_blank" rel="noopener noreferrer"><strong>{employer.name}</strong><span>{employer.regions.join(" + ")} · {employer.industries.slice(0, 2).join(" + ")}</span></a>)}</div></details>
       <p className="registry-contribute">Missing an employer? <a href="https://github.com/i-akb25/VEYRA/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Submit an official source through GitHub ↗</a></p>
     </section>

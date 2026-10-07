@@ -1,12 +1,12 @@
 import { isIP } from "node:net";
 import { resolve } from "node:dns/promises";
 import { NextRequest, NextResponse } from "next/server";
+import { requestLimit } from "@/lib/shared-store";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 
 const schema = z.object({ url: z.string().url().max(2000) });
-const buckets = new Map<string, { count: number; resetAt: number }>();
 
 function privateAddress(address: string): boolean {
   if (address === "::1" || address.startsWith("fc") || address.startsWith("fd") || address.startsWith("fe80:")) return true;
@@ -55,9 +55,8 @@ async function inspect(raw: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const key = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous"; const now = Date.now(); const bucket = buckets.get(key);
-  if (bucket && bucket.resetAt > now && bucket.count >= 12) return NextResponse.json({ error: "Too many checks. Wait one minute and try again." }, { status: 429, headers: { "Retry-After": "60" } });
-  buckets.set(key, !bucket || bucket.resetAt <= now ? { count: 1, resetAt: now + 60_000 } : { ...bucket, count: bucket.count + 1 });
+  const rate = await requestLimit(request.headers, "verify", 12);
+  if (!rate.allowed) return NextResponse.json({ error: rate.unavailable ? "Verification protection is temporarily unavailable." : "Too many checks. Try again shortly." }, { status: rate.unavailable ? 503 : 429, headers: { "Retry-After": String(rate.retryAfter), "Cache-Control": "no-store" } });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Paste a complete HTTPS job-posting URL." }, { status: 400 });
   try { return NextResponse.json(await inspect(parsed.data.url), { headers: { "Cache-Control": "no-store" } }); }

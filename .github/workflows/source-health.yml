@@ -18,12 +18,14 @@ jobs:
         with:
           node-version: 22
       - name: Check official employer feeds
+        env:
+          VEYRA_SOURCE_SAMPLE: 60
         run: node scripts/verify-sources.mjs | tee source-health.log
       - name: Publish run summary
         if: always()
         run: |
           echo "## VEYRA employer source health" >> "$GITHUB_STEP_SUMMARY"
-          echo "Scheduled daily at 03:17 UTC. See the attached report for feed counts and failures." >> "$GITHUB_STEP_SUMMARY"
+          echo "Daily rotating 60-board spot check at 03:17 UTC. The separate employer-refresh workflow checks the full registry and discovery candidates." >> "$GITHUB_STEP_SUMMARY"
       - name: Upload health report
         if: always()
         uses: actions/upload-artifact@v4

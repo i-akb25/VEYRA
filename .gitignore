@@ -10,3 +10,6 @@ coverage/
 *.tsbuildinfo
 source-health-report.json
 search-quality-report.json
+source-refresh-*.json
+refresh-reports/
+candidate-audit.json

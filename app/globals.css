@@ -190,6 +190,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .source-section h3 { margin: .3rem 0 .7rem; font: 2rem Georgia, serif; }
 .source-section > p:not(.eyebrow) { color: var(--muted); line-height: 1.6; max-width: 700px; }
 .board-form { display: flex; gap: .7rem; max-width: 780px; }
+.board-form label { flex: 1; min-width: 0; }
+.board-form label input { width: 100%; }
 .board-form input { background: var(--white); padding: .75rem; border: 1px solid var(--line); }
 .board-list { margin-top: 1rem; max-width: 780px; }
 .board-list > div { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding: .8rem 0; font-size: .78rem; }

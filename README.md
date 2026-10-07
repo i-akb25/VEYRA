@@ -28,7 +28,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Public job-link status checker with SSRF protection and honest live/closed/unknown outcomes
 - Negative keywords, qualification filtering, source-health reporting, pagination and local-data deletion
 - Best-effort in-memory API rate limiting for serverless deployments
-- 107 configured employer feeds with India and international coverage across four public ATS providers; reachable empty feeds are distinguished from active vacancy coverage
+- 2,000+ directly checked employer boards, with India and international coverage across four public ATS providers; active, empty, disabled and discovery-candidate counts are distinguished
 - Local saved search presets and locally hidden-result controls
 - Daily GitHub Actions source-health verification with downloadable reports
 - Safe launchers for major India, US, UK, European, Australian, startup and global job portals
@@ -75,7 +75,7 @@ Run `pnpm benchmark:search` against a running local app, or set
 contain fixed public queries only. See [Phase 9 operations](docs/phase-9-operations.md)
 for review rules, source bounds, freshness and reminder limitations.
 
-`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Set it only when Google Search Console gives you an HTML-tag verification token. Search, resume parsing, local storage and every job source work without environment variables.
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is optional. Set it only when Google Search Console gives you an HTML-tag verification token. Core search, resume parsing, local storage and public job feeds work without environment variables. Shared rate limiting and public-feed caching need the optional server-side Redis credentials in `.env.example`.
 
 ## Brand assets
 
@@ -91,11 +91,11 @@ The route-shaped V and destination point are original VEYRA artwork. Do not repl
 
 ## Data policy
 
-Search terms and the public ATS career-page URLs selected by the user are sent only to VEYRA's `/api/jobs/search` route. The route uses them to retrieve and filter current listings and does not persist them. A job URL is sent to `/api/jobs/verify` only when the user explicitly asks to check it. Candidate profiles, extracted resume fields, saved roles, application records, notes, dates and notification history use browser `localStorage`; they are not included in search requests. Raw resume text is discarded after local extraction. VEYRA does not use a database, authentication, personal analytics or advertising.
+Search terms and the public ATS career-page URLs selected by the user are sent only to VEYRA's `/api/jobs/search` route. The route uses them to retrieve and filter current listings and does not persist them. A job URL is sent to `/api/jobs/verify` only when the user explicitly asks to check it. Candidate profiles, extracted resume fields, saved roles, application records, notes, dates and notification history use browser `localStorage`; they are not included in search requests. Raw resume text is discarded after local extraction. VEYRA does not require a user database, authentication, personal analytics or advertising. Optional Redis shares only short-lived public feeds and hashed security counters.
 
 External job applications happen on the original source website and are outside VEYRA's control. Always verify employer identity and vacancy status before sharing personal information.
 
-Public feeds and official pages can fail or change format. VEYRA reports partial provider failures and does not fabricate vacancies to make the result list look full. Feed and result caches are short-lived server memory/CDN caches and contain public search results, never resumes or profiles. A globally shared rate limiter or continuous background notifications would require external infrastructure and environment variables; neither is silently simulated.
+Public feeds and official pages can fail or change format. VEYRA reports partial provider failures and does not fabricate vacancies to make the result list look full. Feed and result caches are short-lived server memory/CDN caches and contain public search results, never resumes or profiles. The optional globally shared limiter and public-feed cache require the server-side variables in `.env.example`; without them, protection remains per instance. Continuous background notifications still require additional infrastructure.
 
 ## Source health
 
@@ -106,3 +106,7 @@ Run `pnpm verify:sources` to validate the curated public employer feeds. GitHub 
 VEYRA does not scrape LinkedIn, Indeed, Naukri, Foundit, Glassdoor, Wellfound or other restricted platforms. It provides safe search launchers to those services and aggregates only feeds that employers or ATS providers publish for public consumption.
 
 Support and source corrections: akbsupportinfo@gmail.com. Do not send resumes, identity documents or application credentials.
+
+## Automatic coverage and Phase 10
+
+Employer candidates are checked by the daily **Refresh employer coverage** workflow, with weekly discovery and automatic recovery checks. Live vacancies refresh during search without monthly code edits. Source selection uses observed title/location evidence, with further employer groups available. Read [Phase 10 operations](docs/phase-10-operations.md) for shared protection setup, government review, privacy boundaries and counting rules. Discovery attribution is in [third-party data notices](docs/third-party-data-notices.md).
