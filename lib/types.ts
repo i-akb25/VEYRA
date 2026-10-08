@@ -14,7 +14,11 @@ export type ResultLayout = "detailed" | "compact";
 export type SearchMode = "exact" | "balanced" | "broad";
 export type EmploymentSchedule = "any" | "full-time" | "part-time" | "contract" | "internship" | "temporary" | "volunteer";
 
+export type RecruitmentType = "off-campus" | "campus" | "fresher" | "graduate" | "internship" | "apprenticeship";
+
 export type Job = {
+  recruitmentTypes?: RecruitmentType[];
+  openings?: number;
   id: string;
   title: string;
   company: string;

@@ -1,6 +1,8 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { RECRUITMENT_LABELS } from "@/lib/recruitment";
+import type { RecruitmentType } from "@/lib/types";
 import { ApplicationWorkspace } from "./application-workspace";
 import { GovernmentDesk } from "./government-desk";
 import { JobLinkVerifier } from "./job-link-verifier";
@@ -46,6 +48,7 @@ export function JobWorkspace() {
   const [searchMode, setSearchMode] = useState<SearchMode>("balanced");
   const [requiredKeywords, setRequiredKeywords] = useState("");
   const [optionalKeywords, setOptionalKeywords] = useState("");
+  const [recruitment, setRecruitment] = useState<"any" | RecruitmentType>("any");
   const [schedule, setSchedule] = useState<EmploymentSchedule>("any");
   const [relocation, setRelocation] = useState<"any" | "yes" | "no">("any");
   const [includeNearby, setIncludeNearby] = useState(true);
@@ -113,6 +116,7 @@ export function JobWorkspace() {
       if (params.has("experience")) { const level = params.get("experience") as ExperienceLevel; setSelectedExperience([level]); setFilters((current) => ({ ...current, experienceLevel: level })); }
       if (params.has("specificRoles")) setSelectedRoles(params.get("specificRoles")?.split(",").filter(Boolean) ?? []);
       if (params.has("mode")) setSearchMode(params.get("mode") as SearchMode);
+      if (params.has("recruitment")) { const kind = params.get("recruitment"); if (kind === "any" || kind && kind in RECRUITMENT_LABELS) setRecruitment(kind as "any" | RecruitmentType); }
       if (params.has("schedule")) setSchedule(params.get("schedule") as EmploymentSchedule);
     });
     return () => cancelAnimationFrame(frame);
@@ -152,8 +156,8 @@ export function JobWorkspace() {
   async function search(event: FormEvent) {
     event.preventDefault(); setLoading(true); setError(""); setWarnings([]); setView("results");
     try {
-      const params = new URLSearchParams({ q: query, category: roleCategory, categories: selectedCategories.join(","), roles: selectedRoles.join(","), mode: searchMode, required: requiredKeywords, optional: optionalKeywords, industry, location, scope, workplace, workplaces: selectedWorkplaces.join(","), experience: selectedExperience.length === 1 ? selectedExperience[0] : "any", qualification: filters.qualification, schedule, relocation, nearby: String(includeNearby), negative: negativeKeywords, boards: careerBoards.map((board) => board.url).join("\n") });
-      const publicParams = new URLSearchParams({ q: query, roles: selectedCategories.join(","), specificRoles: selectedRoles.join(","), mode: searchMode, industry, location, scope, workplaces: selectedWorkplaces.join(","), experience: selectedExperience.length === 1 ? selectedExperience[0] : "any", schedule });
+      const params = new URLSearchParams({ q: query, category: roleCategory, categories: selectedCategories.join(","), roles: selectedRoles.join(","), mode: searchMode, required: requiredKeywords, optional: optionalKeywords, industry, location, scope, workplace, workplaces: selectedWorkplaces.join(","), experience: selectedExperience.length === 1 ? selectedExperience[0] : "any", qualification: filters.qualification, recruitment, schedule, relocation, nearby: String(includeNearby), negative: negativeKeywords, boards: careerBoards.map((board) => board.url).join("\n") });
+      const publicParams = new URLSearchParams({ q: query, roles: selectedCategories.join(","), specificRoles: selectedRoles.join(","), mode: searchMode, industry, location, scope, workplaces: selectedWorkplaces.join(","), experience: selectedExperience.length === 1 ? selectedExperience[0] : "any", schedule, recruitment });
       window.history.replaceState(null, "", `${window.location.pathname}?${publicParams}#search`);
       const response = await fetch(`/api/jobs/search?${params}`);
       if (!response.ok) { const body = await response.json().catch(() => ({})) as { error?: string }; throw new Error(body.error || "Search failed"); }
@@ -261,7 +265,7 @@ export function JobWorkspace() {
   function exportJobs(format: "csv" | "json") {
     if (!visibleJobs.length) return;
     if (format === "json") { download("veyra-jobs.json", JSON.stringify(visibleJobs, null, 2), "application/json"); return; }
-    const rows = [["Title", "Company", "Location", "Remote", "Experience", "Salary", "Source", "Published", "Match", "URL"], ...visibleJobs.map((job) => [job.title, job.company, job.location, job.remote, job.experienceLevel, job.salaryText ?? "", job.source, job.publishedAt, job.matchScore ?? "", job.url])];
+    const rows = [["Title", "Company", "Location", "Remote", "Experience", "Salary", "Source", "Published", "Match", "Recruitment", "Open positions", "Application deadline", "Last checked", "URL"], ...visibleJobs.map((job) => [job.title, job.company, job.location, job.remote, job.experienceLevel, job.salaryText ?? "", job.source, job.publishedAt, job.matchScore ?? "", (job.recruitmentTypes ?? []).join("; "), job.openings ?? "Not stated", job.closesAt ?? "Not stated", job.lastCheckedAt ?? "", job.url])];
     download("veyra-jobs.csv", rows.map((row) => row.map(csvCell).join(",")).join("\n"), "text/csv;charset=utf-8");
   }
 
@@ -295,6 +299,7 @@ export function JobWorkspace() {
         <label><span>Cities, region or country</span><input list="global-places" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Delhi NCR, Lucknow, London…" maxLength={160} /><datalist id="global-places"><option value="India" />{INDIA_LOCATION_GROUPS.map((group) => <option key={group.id} value={group.label}>{group.state}</option>)}<option value="United States" /><option value="Canada" /><option value="United Kingdom" /><option value="Europe" /><option value="United Arab Emirates" /><option value="Singapore" /><option value="Australia" /></datalist></label>
         <MultiPicker label="Workplace" values={selectedWorkplaces} options={workplaceOptions} onToggle={(value) => { toggleMulti(value, selectedWorkplaces, setSelectedWorkplaces, "any"); setWorkplace(value); }} />
         <MultiPicker label="Experience" values={selectedExperience} options={experienceOptions} onToggle={(value) => { toggleMulti(value, selectedExperience, setSelectedExperience, "any"); setFilters({ ...filters, experienceLevel: value }); }} />
+        <label><span>Recruitment</span><select value={recruitment} onChange={(event) => setRecruitment(event.target.value as "any" | RecruitmentType)}><option value="any">All recruitment</option>{Object.entries(RECRUITMENT_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
         <label><span>Job type</span><select value={schedule} onChange={(event) => setSchedule(event.target.value as EmploymentSchedule)}>{scheduleOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
         <label><span>Search precision</span><select value={searchMode} onChange={(event) => setSearchMode(event.target.value as SearchMode)}><option value="exact">Exact titles</option><option value="balanced">Balanced</option><option value="broad">Broader discovery</option></select></label>
         <label className="inline-check"><input type="checkbox" checked={includeNearby} onChange={(event) => setIncludeNearby(event.target.checked)} /><span>Include nearby cities</span></label>
@@ -374,7 +379,7 @@ function CompareTray({ jobs, onRemove }: { jobs: Job[]; onRemove: (id: string) =
 function JobCard({ job, saved, tracked, isNew, compared, onSave, onTrack, onHide, onOpen, onCompare, onReport }: { job: Job; saved: boolean; tracked: boolean; isNew: boolean; compared: boolean; onSave: () => void; onTrack: () => void; onHide: () => void; onOpen: () => void; onCompare: () => void; onReport: () => void }) {
   return <article className="job-card">
     <div className="job-top"><div><p className="job-source">{isNew && <b>New since last search · </b>}{job.source} · {job.workplace === "unknown" || !job.workplace ? "Workplace not stated" : job.workplace} · {job.freshness}</p><h3>{job.title}</h3><p className="company">{job.company} <span>·</span> {job.location || "Location not stated"}</p></div>{job.matchScore && <div className="score"><strong>{job.matchScore}</strong><span>fit</span></div>}</div>
-    <div className="job-meta"><span>Status: {job.liveStatus === "live" ? "Live in source feed" : job.liveStatus === "closed" ? "Closed" : "Not confirmed"}</span><span>Country: {job.country ?? "Not stated"}</span><span>City: {job.city ?? "Not stated"}</span><span>Experience: {job.experienceRange ?? "Not stated"}</span><span>Qualification: {job.qualification ?? "Not stated"}</span><span>Remote: {job.remoteScope === "not-stated" || !job.remoteScope ? "Not stated" : job.remoteScope}</span><span>Visa: {job.visaSponsorship === "not-stated" || !job.visaSponsorship ? "Not stated" : job.visaSponsorship}</span><span>Work authorisation: {job.workAuthorization ?? "Not stated"}</span><span>Language: {job.requiredLanguage ?? "Not stated"}</span><span>Relocation: {job.relocation === "not-stated" || !job.relocation ? "Not stated" : job.relocation}</span>{job.employmentType && <span>{job.employmentType}</span>}<span>Salary: {job.salaryText ?? "Not stated"}{job.salaryCurrency && job.salaryCurrency !== "Not stated" ? ` · ${job.salaryCurrency}` : ""}</span>{job.publishedAt && <span>Posted: {new Date(job.publishedAt).toLocaleDateString()}</span>}<span>Checked: {job.lastCheckedAt ? new Date(job.lastCheckedAt).toLocaleString() : "Not stated"}</span></div>
+    <div className="job-meta"><span>Status: {job.liveStatus === "live" ? "Live in source feed" : job.liveStatus === "closed" ? "Closed" : "Not confirmed"}</span><span>Country: {job.country ?? "Not stated"}</span><span>City: {job.city ?? "Not stated"}</span><span>Experience: {job.experienceRange ?? "Not stated"}</span><span>Qualification: {job.qualification ?? "Not stated"}</span><span>Remote: {job.remoteScope === "not-stated" || !job.remoteScope ? "Not stated" : job.remoteScope}</span><span>Visa: {job.visaSponsorship === "not-stated" || !job.visaSponsorship ? "Not stated" : job.visaSponsorship}</span><span>Work authorisation: {job.workAuthorization ?? "Not stated"}</span><span>Language: {job.requiredLanguage ?? "Not stated"}</span><span>Relocation: {job.relocation === "not-stated" || !job.relocation ? "Not stated" : job.relocation}</span>{job.employmentType && <span>{job.employmentType}</span>}<span>Open positions: {job.openings ?? "Not stated"}</span><span>Application deadline: {job.closesAt ? new Date(job.closesAt).toLocaleString() : "Not stated"}</span>{(job.recruitmentTypes ?? []).map((kind) => <span key={kind}>{RECRUITMENT_LABELS[kind]}</span>)}<span>Salary: {job.salaryText ?? "Not stated"}{job.salaryCurrency && job.salaryCurrency !== "Not stated" ? ` · ${job.salaryCurrency}` : ""}</span>{job.publishedAt && <span>Posted: {new Date(job.publishedAt).toLocaleDateString()}</span>}<span>Checked: {job.lastCheckedAt ? new Date(job.lastCheckedAt).toLocaleString() : "Not stated"}</span></div>
     {job.matchReasons && <p className="reasons">{job.matchReasons.join(" · ")}</p>}
     {job.missingSkills && job.missingSkills.length > 0 && <p className="missing-skills">Not found in listing: {job.missingSkills.join(", ")}. Verify manually; job descriptions are incomplete.</p>}
     <p className="description">{job.description || "Open the source listing for full role details."}</p>

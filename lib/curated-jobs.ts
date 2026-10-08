@@ -15,6 +15,6 @@ export function curatedJobs(category: RoleCategory): Job[] {
   return records.filter((job) => (category === "custom" || job.categories.includes(category)) && (!job.deadline || Date.parse(job.deadline) >= now)).map((record) => {
     const { categories, deadline, ...job } = record;
     void categories; void deadline;
-    return { ...job, workplace: job.remote ? "remote" as const : "onsite" as const, experienceLevel: inferExperience(`${job.title} ${job.description}`), freshness: getFreshness(job.publishedAt), verifiedAt: "2026-10-03" };
+    return { ...job, workplace: job.remote ? "remote" as const : "onsite" as const, experienceLevel: inferExperience(`${job.title} ${job.description}`), freshness: getFreshness(job.publishedAt), verifiedAt: "2026-10-03", liveStatus: "unknown" as const, liveStatusReason: "Previously reviewed link; current vacancy status is not confirmed." };
   });
 }

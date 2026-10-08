@@ -18,7 +18,7 @@ async function inspect(item) {
     const postings = Array.isArray(data) ? data : Array.isArray(data.jobs) ? data.jobs : Array.isArray(data.content) ? data.content : null;
     if (!postings) throw new Error("Invalid public feed response shape");
     const count = postings.filter((posting) => (posting.title || posting.text || posting.name) && (posting.absolute_url || posting.hostedUrl || posting.jobUrl || posting.ref)).length;
-    return { name: item.name, provider: item.provider, slug: item.slug, status: "healthy", count, active: count > 0, reportedTotal: data.totalFound ?? count, latencyMs: Date.now() - started };
+    return { name: item.name, provider: item.provider, slug: item.slug, sampleTitles: postings.slice(0, 30).map((posting) => posting.title || posting.text || posting.name).filter(Boolean), status: "healthy", count, active: count > 0, reportedTotal: data.totalFound ?? count, latencyMs: Date.now() - started };
   } catch (error) {
     return { name: item.name, provider: item.provider, slug: item.slug, status: "degraded", count: 0, latencyMs: Date.now() - started, error: error instanceof Error ? error.message : "Unknown failure" };
   }
@@ -33,5 +33,14 @@ await writeFile("source-health-report.json", `${JSON.stringify(report, null, 2)}
 
 console.log(`VEYRA source health: ${healthy}/${results.length} employer feeds available`);
 console.log(`${active} feeds returned actual titled postings with links; reachable empty feeds are not counted as active vacancy coverage.`);
+if (process.env.VEYRA_PUBLISH_SOURCE_FACTS === "true") {
+  const evidence = new Map(results.map((result) => [`${result.provider}:${result.slug}`, result]));
+  const refreshed = employers.map((employer) => {
+    const result = evidence.get(`${employer.provider}:${employer.slug}`);
+    // An empty healthy feed remains registered. A failed check never changes its count to zero.
+    return result?.status === "healthy" ? { ...employer, verifiedAt: report.checkedAt, verifiedJobCount: result.reportedTotal, sampleTitles: result.sampleTitles } : employer;
+  });
+  await writeFile(new URL("../data/employers.json", import.meta.url), `${JSON.stringify(refreshed, null, 2)}\n`);
+}
 for (const item of results) console.log(`${item.status === "healthy" ? "OK" : "FAIL"} ${item.provider}:${item.name} (${item.count} jobs, ${item.latencyMs}ms)${item.error ? ` — ${item.error}` : ""}`);
 if (healthy / results.length < 0.7) process.exitCode = 1;
