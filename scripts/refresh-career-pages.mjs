@@ -2,7 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { resolve4, resolve6 } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { employerDirectory } from '../lib/employer-directory.ts';
-import { looksLikeCareerPage, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
+import { linkedJobs, looksLikeCareerPage, normaliseLinkedPosting, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
+import { platformJobs } from './lib/ats-adapters.mjs';
 
 const checkedAt = new Date().toISOString();
 const shardCount = Math.max(1, Number.parseInt(process.env.VEYRA_CAREER_SHARDS ?? '1', 10));
@@ -56,6 +57,26 @@ async function request(raw, { bytes = 2_000_000, robots = true } = {}) {
   throw new Error('Redirect limit reached');
 }
 
+async function requestJson(raw, init = {}, bytes = 6_000_000) {
+  const url = await safe(raw);
+  if (!(await policy(url)).allows(url)) throw new Error('Robots policy disallows this ATS endpoint');
+  const response = await fetch(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(15_000), headers: { Accept: 'application/json', 'User-Agent': 'VEYRA-career-check/1.0', ...(init.headers ?? {}) } });
+  if (!response.ok) throw new Error(`ATS API returned HTTP ${response.status}`);
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Empty ATS response');
+  const parts = []; let received = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > bytes) throw new Error('ATS response exceeded size limit');
+      parts.push(Buffer.from(value));
+    }
+  } finally { await reader.cancel().catch(() => {}); }
+  return JSON.parse(Buffer.concat(parts).toString('utf8'));
+}
+
 async function policy(url) {
   if (robotsCache.has(url.origin)) return robotsCache.get(url.origin);
   const pending = (async () => {
@@ -104,6 +125,8 @@ async function check(employer) {
   const seen = new Set();
   const failures = [];
   const jobs = [];
+  const adaptersChecked = new Set();
+  const providers = new Set();
   try {
     const landing = await safe(employer.careersUrl);
     roots.push(landing);
@@ -121,6 +144,13 @@ async function check(employer) {
       if (!roots.some((root) => root.hostname === result.url.hostname) && knownAtsHosts.test(result.url.hostname)) roots.push(result.url);
       const items = structuredJobs(result.body);
       jobs.push(...items.map((item) => normalisePosting(item, employer, checkedAt)).filter(Boolean));
+      jobs.push(...linkedJobs(result.body, result.url).map((item) => normaliseLinkedPosting(item, employer, checkedAt)));
+      try {
+        const adapter = await platformJobs(result.url, employer, requestJson, checkedAt, adaptersChecked);
+        if (adapter) { providers.add(adapter.provider); jobs.push(...adapter.jobs); }
+      } catch (error) {
+        failures.push(`${result.url.pathname}: ${error instanceof Error ? error.message : 'ATS adapter failed'}`);
+      }
       const links = pageLinks(result.body, result.url).filter((url) => permittedLink(url, roots) && looksLikeCareerPage(url));
       for (const link of links) if (!seen.has(link) && !queued.includes(link)) queued.push(link);
     } catch (error) {
@@ -134,7 +164,7 @@ async function check(employer) {
     source: {
       name: employer.name, url: employer.careersUrl, checkedAt, status, count: uniqueJobs.length || null,
       pagesChecked: Math.max(0, seen.size - failures.length), pagesDiscovered: seen.size + queued.length,
-      scanLimitReached: Boolean(queued.length && seen.size >= maxPages), failures: failures.slice(0, 5)
+      scanLimitReached: Boolean(queued.length && seen.size >= maxPages), providers: [...providers], failures: failures.slice(0, 5)
     },
     jobs: uniqueJobs
   };

@@ -1,10 +1,15 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { looksLikeCareerPage, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
+import { linkedJobs, looksLikeCareerPage, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
 test('only structured actual postings become results', () => {
   assert.deepEqual(structuredJobs('<h1>We hire graduates every year</h1>'), []);
   const html = '<script type="application/ld+json">{"@graph":[{"@type":"JobPosting","title":"Graduate engineer","url":"/jobs/1"}]}</script>';
   assert.equal(structuredJobs(html).length, 1);
+});
+
+test('extracts specific official vacancy links without treating navigation as a job', () => {
+  const html = '<a href="/search/jobs">Search jobs</a><a href="/job/Pune-Power-Systems-Engineer/123456-en_US/">Power Systems Engineer</a>';
+  assert.deepEqual(linkedJobs(html, 'https://careers.example.com/'), [{ title: 'Power Systems Engineer', url: 'https://careers.example.com/job/Pune-Power-Systems-Engineer/123456-en_US/' }]);
 });
 
 test('discovers career links, sitemap entries and path-specific robots rules', () => {

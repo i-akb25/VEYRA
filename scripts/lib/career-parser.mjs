@@ -29,6 +29,37 @@ export function pageLinks(html, baseUrl) {
   return [...new Set(links)];
 }
 
+function plainText(html) {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export function linkedJobs(html, baseUrl) {
+  const jobs = [];
+  const generic = /^(?:apply|apply now|careers?|jobs?|job search|search jobs?|view jobs?|open positions?|opportunities|read more|learn more|join us|details?)$/i;
+  for (const match of html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    try {
+      const title = plainText(match[2]).slice(0, 300);
+      const raw = match[1].replaceAll('&amp;', '&').trim();
+      const url = new URL(raw, baseUrl);
+      url.hash = '';
+      const path = `${url.pathname}${url.search}`;
+      const detailShape = /\/(?:job|jobs|position|positions|vacancy|requisition)(?:\/|\?|$)/i.test(path) && (/\d{3,}/.test(path) || /\/[a-z0-9][a-z0-9-]{8,}(?:\/|\?|$)/i.test(path));
+      if (url.protocol !== 'https:' || url.username || url.password || !detailShape || title.length < 4 || generic.test(title)) continue;
+      jobs.push({ title, url: url.href });
+    } catch { /* malformed job links are ignored */ }
+  }
+  return [...new Map(jobs.map((job) => [job.url, job])).values()];
+}
+
+export function normaliseLinkedPosting(item, employer, checkedAt) {
+  return {
+    id: `career-link-${item.url}`, title: item.title, company: employer.name, location: 'Not specified', remote: false,
+    workplace: 'unknown', source: 'Company Careers', url: item.url, publishedAt: '', description: 'Current vacancy linked from the employer’s official career site.',
+    tags: [], employmentType: '', experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt,
+    liveStatus: 'live', liveStatusReason: 'Linked from the employer’s official career pages at the recorded check time.'
+  };
+}
+
 export function sitemapLinks(xml) {
   return [...xml.matchAll(/<loc\b[^>]*>([\s\S]*?)<\/loc>/gi)].map((match) => match[1].replaceAll('&amp;', '&').trim()).filter(Boolean);
 }
