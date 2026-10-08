@@ -19,6 +19,6 @@ test('maps Oracle public candidate postings without inventing missing facts', as
     return { items: [{ TotalJobsCount: 1, requisitionList: [{ Id: 42, Title: 'Automation Engineer', PrimaryLocation: 'Bengaluru, India' }] }] };
   };
   const jobs = await oracleJobs(oracleTarget('https://acme.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs'), { name: 'Acme' }, fetchJson, '2026-10-08');
-  expect(requestedUrl).toContain('/recruitingICEJobRequisitions?');
+  expect(requestedUrl).toContain('/recruitingCEJobRequisitions?');
   expect(jobs).toHaveLength(1); expect(jobs[0].title).toBe('Automation Engineer'); expect(jobs[0].closesAt).toBeUndefined();
 });
