@@ -9,7 +9,8 @@ test('only structured actual postings become results', () => {
 
 test('extracts specific official vacancy links without treating navigation as a job', () => {
   const html = '<a href="/search/jobs">Search jobs</a><a href="/job/Pune-Power-Systems-Engineer/123456-en_US/">Power Systems Engineer</a>';
-  assert.deepEqual(linkedJobs(html, 'https://careers.example.com/'), [{ title: 'Power Systems Engineer', url: 'https://careers.example.com/job/Pune-Power-Systems-Engineer/123456-en_US/' }]);
+  assert.deepEqual(linkedJobs(html, 'https://careers.example.com/'), [{ title: 'Power Systems Engineer', location: '', url: 'https://careers.example.com/job/Pune-Power-Systems-Engineer/123456-en_US/' }]);
+  assert.deepEqual(linkedJobs('<a href="/job/Bengaluru-CTO-Lead-Robotics-Engineer-IND-560035/115546-en_US/">Cookie Consent Manager</a>', 'https://careers.wipro.com/'), [{ title: 'CTO Lead Robotics Engineer', location: 'Bengaluru', url: 'https://careers.wipro.com/job/Bengaluru-CTO-Lead-Robotics-Engineer-IND-560035/115546-en_US/' }]);
 });
 
 test('discovers career links, sitemap entries and path-specific robots rules', () => {
