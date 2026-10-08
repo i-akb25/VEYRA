@@ -106,3 +106,13 @@ Run `pnpm verify:sources` to validate the curated public employer feeds. GitHub 
 VEYRA does not scrape LinkedIn, Indeed, Naukri, Foundit, Glassdoor, Wellfound or other restricted platforms. It provides safe search launchers to those services and aggregates only feeds that employers or ATS providers publish for public consumption.
 
 Support and source corrections: akbsupportinfo@gmail.com. Do not send resumes, identity documents or application credentials.
+
+## Recurring career discovery
+
+The Sources page lists official career destinations and public ATS boards even when no jobs are open. Recruitment filters cover off-campus drives, campus recruitment, freshers, graduate programmes, internships and apprenticeships. Matching uses explicit listing text; these labels do not prove candidate eligibility.
+
+Job cards and CSV/JSON exports include source-supplied headcount and application deadlines. Missing values remain “Not stated”. Employer feed posting totals are shown separately from the number of people a role will hire.
+
+Daily GitHub Actions refreshes public ATS counts and checks directory pages for structured JobPosting data. New structured vacancies enter the next deployment automatically, without editing application code. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
+
+Current checked-in coverage remains 107 configured feeds and 160 directory entries. This change does not claim 2,000 employers or universal extraction from every career platform. The older Phase 10 recovery checkpoint is incomplete and must not be deployed.
