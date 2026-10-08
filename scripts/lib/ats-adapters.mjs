@@ -45,7 +45,7 @@ export async function oracleJobs(target, employer, fetchJson, checkedAt, maximum
   const output = [];
   for (let offset = 0; offset < maximum; offset += 25) {
     const finder = `findReqs;siteNumber=${target.site},limit=25,offset=${offset},sortBy=POSTING_DATES_DESC`;
-    const endpoint = `${target.origin}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&finder=${encodeURIComponent(finder)}`;
+    const endpoint = `${target.origin}/hcmRestApi/resources/latest/recruitingICEJobRequisitions?onlyData=true&finder=${encodeURIComponent(finder)}`;
     const data = await fetchJson(endpoint);
     const container = Array.isArray(data.items) ? data.items[0] : null;
     const postings = Array.isArray(container?.requisitionList) ? container.requisitionList : [];

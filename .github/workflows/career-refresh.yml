@@ -13,6 +13,9 @@ on:
       - 'scripts/merge-career-snapshots.mjs'
       - 'scripts/lib/career-parser.mjs'
       - 'scripts/lib/career-parser.test.mjs'
+      - 'scripts/lib/ats-adapters.mjs'
+      - 'scripts/lib/ats-adapters.test.mjs'
+      - 'scripts/validate-public-ats.mjs'
 
 concurrency:
   group: career-refresh-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
@@ -39,6 +42,7 @@ jobs:
       - name: Validate public ATS adapter contracts
         run: node scripts/validate-public-ats.mjs
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: career-validation
           path: |
