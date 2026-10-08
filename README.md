@@ -113,6 +113,6 @@ The Sources page lists official career destinations and public ATS boards even w
 
 Job cards and CSV/JSON exports include source-supplied headcount and application deadlines. Missing values remain “Not stated”. Employer feed posting totals are shown separately from the number of people a role will hire.
 
-Daily GitHub Actions refreshes public ATS counts and checks directory pages for structured JobPosting data. New structured vacancies enter the next deployment automatically, without editing application code. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
+Daily GitHub Actions refreshes public ATS counts and scans every registered employer destination through official sitemaps, career indexes and linked vacancy pages. New structured vacancies enter the next deployment automatically, without editing application code. Each employer scan is bounded and reports incomplete coverage explicitly. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
 
 Current checked-in coverage remains 107 configured feeds and 160 directory entries. This change does not claim 2,000 employers or universal extraction from every career platform. The older Phase 10 recovery checkpoint is incomplete and must not be deployed.

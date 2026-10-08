@@ -14,6 +14,62 @@ export function structuredJobs(html) {
   }
   return jobs;
 }
+
+export function pageLinks(html, baseUrl) {
+  const links = [];
+  for (const match of html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>/gi)) {
+    try {
+      const raw = match[1].replaceAll('&amp;', '&').trim();
+      if (!raw || raw.startsWith('#') || /^(?:mailto|tel|javascript|data):/i.test(raw)) continue;
+      const url = new URL(raw, baseUrl);
+      url.hash = '';
+      if (url.protocol === 'https:' && !url.username && !url.password) links.push(url.href);
+    } catch { /* malformed links are ignored */ }
+  }
+  return [...new Set(links)];
+}
+
+export function sitemapLinks(xml) {
+  return [...xml.matchAll(/<loc\b[^>]*>([\s\S]*?)<\/loc>/gi)].map((match) => match[1].replaceAll('&amp;', '&').trim()).filter(Boolean);
+}
+
+export function looksLikeCareerPage(raw) {
+  try {
+    const url = new URL(raw);
+    return /(?:career|job|opening|opportunit|vacanc|position|requisition|search-jobs|jobsearch|join-us|work-with-us)/i.test(`${url.hostname}${url.pathname}${url.search}`);
+  } catch { return false; }
+}
+
+export function robotsPolicy(text, userAgent = 'VEYRA-career-check') {
+  const groups = [];
+  let agents = [];
+  let rules = [];
+  const commit = () => { if (agents.length) groups.push({ agents, rules }); agents = []; rules = []; };
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.replace(/\s*#.*$/, '').trim();
+    if (!line) continue;
+    const match = line.match(/^([a-z-]+)\s*:\s*(.*)$/i);
+    if (!match) continue;
+    const key = match[1].toLowerCase(); const value = match[2].trim();
+    if (key === 'user-agent') { if (rules.length) commit(); agents.push(value.toLowerCase()); }
+    else if (key === 'allow' || key === 'disallow') rules.push({ allow: key === 'allow', path: value });
+  }
+  commit();
+  const name = userAgent.toLowerCase();
+  const matching = groups.filter((group) => group.agents.some((agent) => agent === '*' || name.includes(agent)));
+  const specific = matching.filter((group) => group.agents.some((agent) => agent !== '*' && name.includes(agent)));
+  const selected = specific.length ? specific : matching.filter((group) => group.agents.includes('*'));
+  return {
+    allows(url) {
+      const path = `${url.pathname}${url.search}`;
+      const rules = selected.flatMap((group) => group.rules).filter((rule) => rule.path && path.startsWith(rule.path));
+      if (!rules.length) return true;
+      rules.sort((a, b) => b.path.length - a.path.length || Number(b.allow) - Number(a.allow));
+      return rules[0].allow;
+    },
+    sitemaps: [...text.matchAll(/^\s*Sitemap\s*:\s*(\S+)/gim)].map((match) => match[1])
+  };
+}
 export function normalisePosting(item, page, checkedAt) {
   if (typeof item.title !== 'string' || !item.title.trim() || typeof item.url !== 'string') return null;
   let url;
