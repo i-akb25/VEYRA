@@ -17,7 +17,7 @@ const checks = [
   },
   {
     name: 'Oracle Recruiting public candidate feed',
-    run: () => oracleJobs(oracleTarget('https://fa-evlj-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs'), { name: 'IOM' }, fetchJson, checkedAt, 25)
+    run: () => oracleJobs(oracleTarget('https://eeho.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/jobsearch/jobs'), { name: 'Oracle' }, fetchJson, checkedAt, 25)
   }
 ];
 
