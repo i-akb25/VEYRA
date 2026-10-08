@@ -36,10 +36,14 @@ jobs:
           VEYRA_CAREER_MAX_PAGES: 8
           VEYRA_CAREER_OUTPUT: career-validation.json
         run: node --experimental-strip-types scripts/refresh-career-pages.mjs
+      - name: Validate public ATS adapter contracts
+        run: node scripts/validate-public-ats.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: career-validation
-          path: career-validation.json
+          path: |
+            career-validation.json
+            ats-contract-report.json
           retention-days: 7
 
   scan:
