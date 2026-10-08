@@ -1,17 +1,58 @@
 name: Refresh official career pages
+
 on:
   schedule:
     - cron: '43 4 * * *'
   workflow_dispatch:
-permissions:
-  contents: write
+  pull_request:
+    paths:
+      - '.github/workflows/career-refresh.yml'
+      - 'data/career-snapshot.json'
+      - 'lib/employer-directory.ts'
+      - 'scripts/refresh-career-pages.mjs'
+      - 'scripts/merge-career-snapshots.mjs'
+      - 'scripts/lib/career-parser.mjs'
+      - 'scripts/lib/career-parser.test.mjs'
+
 concurrency:
-  group: career-refresh
+  group: career-refresh-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
   cancel-in-progress: false
+
 jobs:
-  refresh:
+  validate-crawler:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check representative official career sites
+        env:
+          VEYRA_CAREER_SAMPLE: 6
+          VEYRA_CAREER_MAX_PAGES: 8
+          VEYRA_CAREER_OUTPUT: career-validation.json
+        run: node --experimental-strip-types scripts/refresh-career-pages.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: career-validation
+          path: career-validation.json
+          retention-days: 7
+
+  scan:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,7 +60,38 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --experimental-strip-types scripts/refresh-career-pages.mjs
+      - name: Scan official career indexes and linked vacancy pages
+        env:
+          VEYRA_CAREER_SHARDS: 8
+          VEYRA_CAREER_SHARD: ${{ matrix.shard }}
+          VEYRA_CAREER_MAX_PAGES: 24
+        run: node --experimental-strip-types scripts/refresh-career-pages.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: career-snapshot-${{ matrix.shard }}
+          path: career-snapshot-${{ matrix.shard }}.json
+          retention-days: 7
+
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: career-snapshot-*
+          merge-multiple: true
+          path: career-reports
+      - run: node scripts/merge-career-snapshots.mjs career-reports
       - name: Publish public vacancy snapshot
         run: |
           git config user.name "VEYRA source maintenance"
