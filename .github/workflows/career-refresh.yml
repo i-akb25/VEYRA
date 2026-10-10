@@ -33,6 +33,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Check representative official career sites
         env:
           VEYRA_CAREER_SAMPLE: 6
@@ -68,6 +69,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Scan official career indexes and linked vacancy pages
         env:
           VEYRA_CAREER_SHARDS: 8
@@ -94,6 +96,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - uses: actions/download-artifact@v7
         with:
           pattern: career-snapshot-*
