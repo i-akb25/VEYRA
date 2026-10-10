@@ -15,6 +15,9 @@ on:
       - 'scripts/lib/career-parser.test.mjs'
       - 'scripts/lib/ats-adapters.mjs'
       - 'scripts/lib/ats-adapters.test.mjs'
+      - 'scripts/lib/career-quality.mjs'
+      - 'scripts/lib/career-quality.test.mjs'
+      - 'scripts/audit-career-snapshot.mjs'
       - 'scripts/validate-public-ats.mjs'
 
 concurrency:
@@ -42,6 +45,8 @@ jobs:
         run: node --experimental-strip-types scripts/refresh-career-pages.mjs
       - name: Validate public ATS adapter contracts
         run: node scripts/validate-public-ats.mjs
+      - name: Audit vacancy quality
+        run: node scripts/audit-career-snapshot.mjs career-validation.json
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -49,6 +54,7 @@ jobs:
           path: |
             career-validation.json
             ats-contract-report.json
+            career-quality-report.json
           retention-days: 7
 
   scan:
@@ -103,6 +109,8 @@ jobs:
           merge-multiple: true
           path: career-reports
       - run: node scripts/merge-career-snapshots.mjs career-reports
+      - name: Audit vacancy quality
+        run: node scripts/audit-career-snapshot.mjs data/career-snapshot.json
       - name: Publish public vacancy snapshot
         run: |
           git config user.name "VEYRA source maintenance"

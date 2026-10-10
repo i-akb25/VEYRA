@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { linkedJobs, looksLikeCareerPage, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
+import { linkedJobs, looksLikeCareerPage, normalisePosting, pageLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
 test('only structured actual postings become results', () => {
   assert.deepEqual(structuredJobs('<h1>We hire graduates every year</h1>'), []);
   const html = '<script type="application/ld+json">{"@graph":[{"@type":"JobPosting","title":"Graduate engineer","url":"/jobs/1"}]}</script>';
@@ -11,6 +11,13 @@ test('extracts specific official vacancy links without treating navigation as a 
   const html = '<a href="/search/jobs">Search jobs</a><a href="/job/Pune-Power-Systems-Engineer/123456-en_US/">Power Systems Engineer</a>';
   assert.deepEqual(linkedJobs(html, 'https://careers.example.com/'), [{ title: 'Power Systems Engineer', location: '', url: 'https://careers.example.com/job/Pune-Power-Systems-Engineer/123456-en_US/' }]);
   assert.deepEqual(linkedJobs('<a href="/job/Bengaluru-CTO-Lead-Robotics-Engineer-IND-560035/115546-en_US/">Cookie Consent Manager</a>', 'https://careers.wipro.com/'), [{ title: 'CTO Lead Robotics Engineer', location: 'Bengaluru', url: 'https://careers.wipro.com/job/Bengaluru-CTO-Lead-Robotics-Engineer-IND-560035/115546-en_US/' }]);
+});
+
+test('extracts SmartRecruiters vacancies and embedded ATS destinations safely', () => {
+  const listing = '<a href="https://jobs.smartrecruiters.com/AECOM2/744000123456789-electrical-engineer"><h4>Electrical Engineer</h4></a>';
+  assert.deepEqual(linkedJobs(listing, 'https://careers.smartrecruiters.com/AECOM2'), [{ title: 'Electrical Engineer', location: '', url: 'https://jobs.smartrecruiters.com/AECOM2/744000123456789-electrical-engineer' }]);
+  const embedded = '<script>window.jobs={"url":"https:\\/\\/careers.smartrecruiters.com\\/AECOM2","bad":"https:\\/\\/smartrecruiters.com.evil.test\\/AECOM2"}</script>';
+  assert.deepEqual(platformLinks(embedded), ['https://careers.smartrecruiters.com/AECOM2']);
 });
 
 test('discovers career links, sitemap entries and path-specific robots rules', () => {

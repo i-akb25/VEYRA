@@ -1,14 +1,15 @@
 export type EmployerDirectoryEntry = {
   name: string;
   careersUrl: string;
+  discoveryUrls?: string[];
   regions: string[];
   industries: string[];
   reviewedAt: string;
 };
 
 const reviewedAt = "2026-10-05";
-const group = (regions: string[], industries: string[], entries: Array<[string, string]>): EmployerDirectoryEntry[] =>
-  entries.map(([name, careersUrl]) => ({ name, careersUrl, regions, industries, reviewedAt }));
+const group = (regions: string[], industries: string[], entries: Array<[string, string, string[]?]>): EmployerDirectoryEntry[] =>
+  entries.map(([name, careersUrl, discoveryUrls]) => ({ name, careersUrl, ...(discoveryUrls ? { discoveryUrls } : {}), regions, industries, reviewedAt }));
 
 export const employerDirectory: EmployerDirectoryEntry[] = [
   ...group(["India", "Global"], ["Technology", "Consulting"], [
@@ -20,14 +21,14 @@ export const employerDirectory: EmployerDirectoryEntry[] = [
   ...group(["India", "Global"], ["Technology", "Product"], [
     ["Google", "https://www.google.com/about/careers/applications/jobs/results/"], ["Microsoft", "https://jobs.careers.microsoft.com/global/en/search"], ["Amazon", "https://www.amazon.jobs/en/search"], ["Apple", "https://jobs.apple.com/en-in/search"],
     ["Adobe", "https://careers.adobe.com/us/en"], ["Salesforce", "https://careers.salesforce.com/en/jobs/"], ["Oracle", "https://www.oracle.com/careers/"], ["SAP", "https://jobs.sap.com/"],
-    ["Zoho", "https://www.zoho.com/careers/"], ["Freshworks", "https://www.freshworks.com/company/careers/"], ["Razorpay", "https://razorpay.com/jobs/"], ["PhonePe", "https://www.phonepe.com/careers/"],
+    ["Zoho", "https://www.zoho.com/careers/"], ["Freshworks", "https://www.freshworks.com/company/careers/"], ["Razorpay", "https://razorpay.com/jobs/"], ["PhonePe", "https://www.phonepe.com/careers/", ["https://careers.smartrecruiters.com/PHONEPELIMITED"]],
     ["Paytm", "https://paytm.com/careers/"], ["Flipkart", "https://www.flipkartcareers.com/"], ["Meesho", "https://www.meesho.io/jobs"], ["Swiggy", "https://careers.swiggy.com/"],
     ["Zomato", "https://www.zomato.com/careers"], ["MakeMyTrip", "https://careers.makemytrip.com/"], ["OYO", "https://www.oyorooms.com/careers/"], ["Dream11", "https://about.dream11.in/careers/"]
   ]),
   ...group(["India"], ["Manufacturing", "Electrical", "Automation", "Energy", "Construction"], [
     ["Reliance Industries", "https://careers.ril.com/"], ["Jio", "https://careers.jio.com/"], ["Tata Motors", "https://careers.tatamotors.com/"], ["Tata Steel", "https://www.tatasteel.com/careers/"],
     ["Tata Power", "https://www.tatapower.com/careers"], ["Larsen & Toubro", "https://www.larsentoubro.com/corporate/careers/"], ["Siemens India", "https://www.siemens.com/in/en/company/jobs.html"], ["Schneider Electric India", "https://www.se.com/in/en/about-us/careers/"],
-    ["ABB India", "https://careers.abb/global/en"], ["Bosch India", "https://www.bosch.in/careers/"], ["Honeywell India", "https://careers.honeywell.com/"], ["Hitachi Energy", "https://www.hitachienergy.com/in/en/careers"],
+    ["ABB India", "https://careers.abb/global/en"], ["Bosch India", "https://www.bosch.in/careers/", ["https://careers.smartrecruiters.com/BoschGroup"]], ["Honeywell India", "https://careers.honeywell.com/"], ["Hitachi Energy", "https://www.hitachienergy.com/in/en/careers"],
     ["GE Vernova", "https://careers.gevernova.com/"], ["Mahindra", "https://www.mahindra.com/careers"], ["Maruti Suzuki", "https://www.marutisuzuki.com/corporate/careers"], ["Hyundai India", "https://www.hyundai.com/in/en/hyundai-story/career"],
     ["JSW", "https://www.jsw.in/careers"], ["Adani", "https://careers.adani.com/"], ["Vedanta", "https://www.vedantalimited.com/eng/work-at-vedanta.php"], ["Ola Electric", "https://www.olaelectric.com/careers"]
   ]),
@@ -54,13 +55,13 @@ export const employerDirectory: EmployerDirectoryEntry[] = [
   ]),
   ...group(["Global"], ["Manufacturing", "Energy", "Mobility", "Construction"], [
     ["Tesla", "https://www.tesla.com/careers/search/"], ["SpaceX", "https://www.spacex.com/careers/jobs/"], ["Boeing", "https://jobs.boeing.com/"], ["Airbus", "https://www.airbus.com/en/careers/search-and-apply"],
-    ["Siemens", "https://jobs.siemens.com/careers"], ["Schneider Electric", "https://www.se.com/ww/en/about-us/careers/"], ["ABB", "https://careers.abb/global/en"], ["Bosch", "https://www.bosch.com/careers/"],
+    ["Siemens", "https://jobs.siemens.com/careers"], ["Schneider Electric", "https://www.se.com/ww/en/about-us/careers/"], ["ABB", "https://careers.abb/global/en"], ["Bosch", "https://www.bosch.com/careers/", ["https://careers.smartrecruiters.com/BoschGroup"]],
     ["Honeywell", "https://careers.honeywell.com/"], ["Johnson Controls", "https://jobs.johnsoncontrols.com/"], ["Shell", "https://www.shell.com/careers.html"], ["BP", "https://www.bp.com/en/global/corporate/careers.html"],
-    ["ExxonMobil", "https://jobs.exxonmobil.com/"], ["Equinor", "https://www.equinor.com/careers"], ["AECOM", "https://aecom.jobs/"], ["Jacobs", "https://careers.jacobs.com/"]
+    ["ExxonMobil", "https://jobs.exxonmobil.com/"], ["Equinor", "https://www.equinor.com/careers"], ["AECOM", "https://aecom.jobs/", ["https://careers.smartrecruiters.com/AECOM2"]], ["Jacobs", "https://careers.jacobs.com/"]
   ]),
   ...group(["Global"], ["Finance", "Banking", "Payments"], [
     ["JPMorgan Chase", "https://careers.jpmorgan.com/"], ["Goldman Sachs", "https://www.goldmansachs.com/careers"], ["Morgan Stanley", "https://www.morganstanley.com/people-opportunities"], ["HSBC", "https://www.hsbc.com/careers"],
-    ["Barclays", "https://search.jobs.barclays/"], ["Standard Chartered", "https://www.sc.com/en/global-careers/"], ["Citi", "https://jobs.citi.com/"], ["Visa", "https://jobs.smartrecruiters.com/Visa"],
+    ["Barclays", "https://search.jobs.barclays/"], ["Standard Chartered", "https://www.sc.com/en/global-careers/"], ["Citi", "https://jobs.citi.com/"], ["Visa", "https://jobs.smartrecruiters.com/Visa", ["https://careers.smartrecruiters.com/Visa"]],
     ["Mastercard", "https://careers.mastercard.com/us/en"], ["American Express", "https://www.americanexpress.com/en-us/careers/"], ["PayPal", "https://careers.pypl.com/"], ["Wise", "https://www.wise.jobs/"]
   ]),
   ...group(["Global"], ["Healthcare", "Science", "Pharmaceuticals"], [
@@ -73,6 +74,6 @@ export const employerDirectory: EmployerDirectoryEntry[] = [
   ]),
   ...group(["Global"], ["Public Interest", "International Organisations"], [
     ["United Nations", "https://careers.un.org/"], ["UNICEF", "https://jobs.unicef.org/"], ["World Bank", "https://www.worldbank.org/en/about/careers"], ["WHO", "https://www.who.int/careers"],
-    ["Asian Development Bank", "https://www.adb.org/work-with-us/careers"], ["OECD", "https://www.oecd.org/careers/"], ["International Labour Organization", "https://jobs.ilo.org/"], ["CERN", "https://careers.cern/"]
+    ["Asian Development Bank", "https://www.adb.org/work-with-us/careers"], ["OECD", "https://www.oecd.org/careers/"], ["International Labour Organization", "https://jobs.ilo.org/"], ["CERN", "https://careers.cern/", ["https://careers.smartrecruiters.com/cern"]]
   ])
 ];

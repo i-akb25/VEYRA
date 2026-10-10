@@ -1,9 +1,14 @@
 import { test, expect } from 'vitest';
-import { oracleJobs, oracleTarget, workdayJobs, workdayTarget } from './ats-adapters.mjs';
+import { oracleJobs, oracleTarget, smartRecruitersTarget, workdayJobs, workdayTarget } from './ats-adapters.mjs';
 
 test('detects public Workday and Oracle candidate sites', () => {
   expect(workdayTarget('https://acme.wd5.myworkdayjobs.com/en-US/External')).toMatchObject({ tenant: 'acme', site: 'External', locale: 'en-US' });
   expect(oracleTarget('https://acme.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs')).toMatchObject({ site: 'CX_1', locale: 'en' });
+});
+
+test('canonicalises public SmartRecruiters company pages without using its blocked API', () => {
+  expect(smartRecruitersTarget('https://jobs.smartrecruiters.com/AECOM2/744000123-example')).toEqual({ company: 'AECOM2', careersUrl: 'https://careers.smartrecruiters.com/AECOM2', key: 'smartrecruiters:aecom2' });
+  expect(smartRecruitersTarget('https://smartrecruiters.com.evil.test/AECOM2')).toBeNull();
 });
 
 test('maps Workday public postings and paginates until total', async () => {
