@@ -115,4 +115,6 @@ Job cards and CSV/JSON exports include source-supplied headcount and application
 
 Daily GitHub Actions refreshes public ATS counts and scans every registered employer destination through official sitemaps, career indexes and linked vacancy pages. New structured vacancies enter the next deployment automatically, without editing application code. Each employer scan is bounded and reports incomplete coverage explicitly. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
 
+The career worker also extracts specific vacancy links from official listing pages and uses public Workday and Oracle Recruiting candidate endpoints when those platforms are detected. It does not treat generic “Search jobs” navigation as a vacancy. Missing dates, locations and hiring counts remain unstated.
+
 Current checked-in coverage remains 107 configured feeds and 160 directory entries. This change does not claim 2,000 employers or universal extraction from every career platform. The older Phase 10 recovery checkpoint is incomplete and must not be deployed.

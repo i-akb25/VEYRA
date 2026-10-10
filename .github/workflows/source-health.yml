@@ -13,10 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Check official employer feeds
         env:
           VEYRA_PUBLISH_SOURCE_FACTS: "true"
@@ -36,7 +37,7 @@ jobs:
           echo "Scheduled daily at 03:17 UTC. See the attached report for feed counts and failures." >> "$GITHUB_STEP_SUMMARY"
       - name: Upload health report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: source-health-${{ github.run_id }}
           path: |
@@ -48,17 +49,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Measure fixed local and global searches
         env:
           VEYRA_BENCHMARK_URL: https://veyra-pro.vercel.app
         run: node scripts/benchmark-search.mjs
       - name: Upload public benchmark report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: search-quality-${{ github.run_id }}
           path: search-quality-report.json

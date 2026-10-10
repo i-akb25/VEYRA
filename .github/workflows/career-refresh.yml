@@ -13,6 +13,9 @@ on:
       - 'scripts/merge-career-snapshots.mjs'
       - 'scripts/lib/career-parser.mjs'
       - 'scripts/lib/career-parser.test.mjs'
+      - 'scripts/lib/ats-adapters.mjs'
+      - 'scripts/lib/ats-adapters.test.mjs'
+      - 'scripts/validate-public-ats.mjs'
 
 concurrency:
   group: career-refresh-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
@@ -26,20 +29,26 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Check representative official career sites
         env:
           VEYRA_CAREER_SAMPLE: 6
           VEYRA_CAREER_MAX_PAGES: 8
           VEYRA_CAREER_OUTPUT: career-validation.json
         run: node --experimental-strip-types scripts/refresh-career-pages.mjs
-      - uses: actions/upload-artifact@v4
+      - name: Validate public ATS adapter contracts
+        run: node scripts/validate-public-ats.mjs
+      - uses: actions/upload-artifact@v6
+        if: always()
         with:
           name: career-validation
-          path: career-validation.json
+          path: |
+            career-validation.json
+            ats-contract-report.json
           retention-days: 7
 
   scan:
@@ -54,19 +63,20 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Scan official career indexes and linked vacancy pages
         env:
           VEYRA_CAREER_SHARDS: 8
           VEYRA_CAREER_SHARD: ${{ matrix.shard }}
           VEYRA_CAREER_MAX_PAGES: 24
         run: node --experimental-strip-types scripts/refresh-career-pages.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: career-snapshot-${{ matrix.shard }}
           path: career-snapshot-${{ matrix.shard }}.json
@@ -80,13 +90,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - uses: actions/download-artifact@v4
+          package-manager-cache: false
+      - uses: actions/download-artifact@v7
         with:
           pattern: career-snapshot-*
           merge-multiple: true
