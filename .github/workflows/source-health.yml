@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Check official employer feeds
         env:
           VEYRA_PUBLISH_SOURCE_FACTS: "true"
@@ -52,6 +53,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Measure fixed local and global searches
         env:
           VEYRA_BENCHMARK_URL: https://veyra-pro.vercel.app
