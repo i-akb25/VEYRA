@@ -29,6 +29,47 @@ export function pageLinks(html, baseUrl) {
   return [...new Set(links)];
 }
 
+function plainText(html) {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export function linkedJobs(html, baseUrl) {
+  const jobs = [];
+  const generic = /^(?:apply|apply now|careers?|jobs?|job search|search jobs?|view jobs?|open positions?|opportunities|read more|learn more|join us|details?)$/i;
+  for (const match of html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    try {
+      let title = plainText(match[2]).slice(0, 300);
+      const raw = match[1].replaceAll('&amp;', '&').trim();
+      const url = new URL(raw, baseUrl);
+      url.hash = '';
+      const path = `${url.pathname}${url.search}`;
+      const detailShape = /\/(?:job|jobs|position|positions|vacancy|requisition)(?:\/|\?|$)/i.test(path) && (/\d{3,}/.test(path) || /\/[a-z0-9][a-z0-9-]{8,}(?:\/|\?|$)/i.test(path));
+      let location = '';
+      if (/\b(?:cookie|consent|privacy|preferences?)\b/i.test(title)) {
+        const parts = url.pathname.split('/').filter(Boolean);
+        const idIndex = parts.findIndex((part, index) => index > 0 && /^\d{3,}(?:-[a-z_]+)?$/i.test(part));
+        const slug = decodeURIComponent(parts[idIndex > 0 ? idIndex - 1 : parts.length - 1] ?? '');
+        const words = slug.split('-').filter(Boolean);
+        const countryIndex = words.findLastIndex((word, index) => index > 0 && /^[A-Z]{3}$/.test(word));
+        const end = countryIndex > 1 ? countryIndex : words.length;
+        if (words.length > 2) { location = words[0]; title = words.slice(1, end).join(' ').replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim(); }
+      }
+      if (url.protocol !== 'https:' || url.username || url.password || !detailShape || title.length < 4 || generic.test(title)) continue;
+      jobs.push({ title, location, url: url.href });
+    } catch { /* malformed job links are ignored */ }
+  }
+  return [...new Map(jobs.map((job) => [job.url, job])).values()];
+}
+
+export function normaliseLinkedPosting(item, employer, checkedAt) {
+  return {
+    id: `career-link-${item.url}`, title: item.title, company: employer.name, location: item.location || 'Not specified', remote: false,
+    workplace: item.location ? 'onsite' : 'unknown', source: 'Company Careers', url: item.url, publishedAt: '', description: 'Current vacancy linked from the employer’s official career site.',
+    tags: [], employmentType: '', experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt,
+    liveStatus: 'live', liveStatusReason: 'Linked from the employer’s official career pages at the recorded check time.'
+  };
+}
+
 export function sitemapLinks(xml) {
   return [...xml.matchAll(/<loc\b[^>]*>([\s\S]*?)<\/loc>/gi)].map((match) => match[1].replaceAll('&amp;', '&').trim()).filter(Boolean);
 }
