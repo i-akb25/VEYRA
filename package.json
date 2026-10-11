@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "audit:careers": "node scripts/audit-career-snapshot.mjs",
+    "audit:registry": "node scripts/audit-employer-registry.mjs",
+    "import:employers": "node scripts/import-employers.mjs",
+    "verify:release": "pnpm test && pnpm typecheck && pnpm lint && pnpm audit:registry && pnpm audit:careers && pnpm build",
     "verify:sources": "node scripts/verify-sources.mjs",
     "benchmark:search": "node scripts/benchmark-search.mjs"
   },

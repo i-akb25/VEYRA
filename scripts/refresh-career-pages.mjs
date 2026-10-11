@@ -2,8 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { resolve4, resolve6 } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { employerDirectory } from '../lib/employer-directory.ts';
-import { linkedJobs, looksLikeCareerPage, normaliseLinkedPosting, normalisePosting, pageLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
-import { platformJobs, smartRecruitersTarget } from './lib/ats-adapters.mjs';
+import { linkedJobs, looksLikeCareerPage, normaliseLinkedPosting, normalisePosting, pageLinks, paginationLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
+import { htmlPlatform, platformJobs, smartRecruitersTarget } from './lib/ats-adapters.mjs';
 
 const checkedAt = new Date().toISOString();
 const shardCount = Math.max(1, Number.parseInt(process.env.VEYRA_CAREER_SHARDS ?? '1', 10));
@@ -12,7 +12,7 @@ const sample = Math.max(0, Number.parseInt(process.env.VEYRA_CAREER_SAMPLE ?? '0
 const maxPages = Math.max(1, Number.parseInt(process.env.VEYRA_CAREER_MAX_PAGES ?? '24', 10));
 const selected = employerDirectory.filter((_, index) => index % shardCount === shard).slice(0, sample || undefined);
 const robotsCache = new Map();
-const knownAtsHosts = /(?:greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|myworkdayjobs\.com|successfactors\.(?:com|eu)|oraclecloud\.com|icims\.com|jobvite\.com|workable\.com|bamboohr\.com)$/i;
+const knownAtsHosts = /(?:greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|myworkdayjobs\.com|successfactors\.(?:com|eu)|oraclecloud\.com|icims\.com|taleo\.net|phenompeople\.com|jobvite\.com|workable\.com|bamboohr\.com)$/i;
 
 function publicAddress(ip) {
   if (ip.includes(':')) return /^2[0-9a-f]{3}:/i.test(ip);
@@ -154,6 +154,8 @@ async function check(employer) {
       jobs.push(...items.map((item) => normalisePosting(item, employer, checkedAt)).filter(Boolean));
       const linked = linkedJobs(result.body, result.url);
       jobs.push(...linked.map((item) => normaliseLinkedPosting(item, employer, checkedAt)));
+      const htmlProvider = htmlPlatform(result.url, result.body);
+      if (htmlProvider) providers.add(htmlProvider);
       const smartRecruiters = smartRecruitersTarget(result.url);
       if (smartRecruiters) {
         if (linked.length) providers.add('SmartRecruiters');
@@ -165,7 +167,7 @@ async function check(employer) {
       } catch (error) {
         failures.push(`${result.url.pathname}: ${error instanceof Error ? error.message : 'ATS adapter failed'}`);
       }
-      const links = pageLinks(result.body, result.url).filter((url) => permittedLink(url, roots) && looksLikeCareerPage(url));
+      const links = [...pageLinks(result.body, result.url).filter((url) => permittedLink(url, roots) && looksLikeCareerPage(url)), ...paginationLinks(result.body, result.url).filter((url) => permittedLink(url, roots))];
       const atsLinks = platformLinks(result.body).filter((url) => permittedLink(url, roots));
       for (const link of [...links, ...atsLinks]) if (!seen.has(link) && !queued.includes(link)) queued.push(link);
     } catch (error) {

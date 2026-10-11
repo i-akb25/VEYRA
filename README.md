@@ -29,6 +29,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Negative keywords, qualification filtering, source-health reporting, pagination and local-data deletion
 - Best-effort in-memory API rate limiting for serverless deployments
 - 107 configured employer feeds with India and international coverage across four public ATS providers; reachable empty feeds are distinguished from active vacancy coverage
+- Employer-directory data and review provenance stored separately from application code, with a validated dry-run/write importer for reviewed additions
 - Local saved search presets and locally hidden-result controls
 - Daily GitHub Actions source-health verification with downloadable reports
 - Safe launchers for major India, US, UK, European, Australian, startup and global job portals
@@ -44,6 +45,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Installable PWA shell with an explicit install prompt and offline fallback for returning to locally stored work
 - Hindi guidance, profession/location/government landing pages and a GitHub-backed source-submission form
 - Indexable About, Sources, Methodology, Privacy and Disclaimer pages, structured data, sitemap and robots policy
+- Public `/api/health` coverage-freshness status and a mandatory GitHub release gate covering tests, types, lint, registry and vacancy audits, and the production build
 
 ## Local development
 
@@ -62,6 +64,8 @@ pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm audit:registry
+pnpm audit:careers
 ```
 
 Phase 9 adds real filter diagnostics, explicit city filtering, user-controlled
@@ -115,6 +119,6 @@ Job cards and CSV/JSON exports include source-supplied headcount and application
 
 Daily GitHub Actions refreshes public ATS counts and scans every registered employer destination through official sitemaps, career indexes and linked vacancy pages. New structured vacancies enter the next deployment automatically, without editing application code. Each employer scan is bounded and reports incomplete coverage explicitly. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
 
-The career worker also extracts specific vacancy links from official listing pages and uses public Workday and Oracle Recruiting candidate endpoints when those platforms are detected. It does not treat generic “Search jobs” navigation as a vacancy. Missing dates, locations and hiring counts remain unstated.
+The career worker also extracts specific vacancy links from official listing pages and uses public Workday and Oracle Recruiting candidate endpoints when those platforms are detected. Employer-linked SAP SuccessFactors, iCIMS, Oracle Taleo and Phenom pages are recognised and processed through bounded public HTML discovery. It does not treat generic “Search jobs” navigation as a vacancy. Missing dates, locations and hiring counts remain unstated.
 
-Current checked-in coverage remains 107 configured feeds and 160 directory entries. This change does not claim 2,000 employers or universal extraction from every career platform. The older Phase 10 recovery checkpoint is incomplete and must not be deployed.
+Current checked-in coverage remains 107 configured feeds and 160 named directory entries, representing 265 distinct feed or career destinations. This release does not claim 2,000 employers or universal extraction from every career platform. The older Phase 10 recovery checkpoint is incomplete and must not be deployed. New employers must be supplied as reviewed data with provenance and pass `pnpm import:employers -- <file>` before `--write` is used.

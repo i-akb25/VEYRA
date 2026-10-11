@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-10-11T17:33:34.486Z",
+  "directoryEntries": 160,
+  "configuredFeeds": 107,
+  "distinctDestinations": 265,
+  "providers": {
+    "lever": 12,
+    "greenhouse": 45,
+    "ashby": 9,
+    "smartrecruiters": 41
+  },
+  "snapshotCheckedAt": "2026-10-11T17:10:09.926Z",
+  "snapshotJobs": 4988,
+  "snapshotSources": 160,
+  "sourcesWithConfirmedVacancies": 59,
+  "pagesChecked": 2546
+}

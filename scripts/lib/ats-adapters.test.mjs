@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { oracleJobs, oracleTarget, smartRecruitersTarget, workdayJobs, workdayTarget } from './ats-adapters.mjs';
+import { htmlPlatform, icimsTarget, oracleJobs, oracleTarget, phenomTarget, smartRecruitersTarget, successFactorsTarget, taleoTarget, workdayJobs, workdayTarget } from './ats-adapters.mjs';
 
 test('detects public Workday and Oracle candidate sites', () => {
   expect(workdayTarget('https://acme.wd5.myworkdayjobs.com/en-US/External')).toMatchObject({ tenant: 'acme', site: 'External', locale: 'en-US' });
@@ -9,6 +9,15 @@ test('detects public Workday and Oracle candidate sites', () => {
 test('canonicalises public SmartRecruiters company pages without using its blocked API', () => {
   expect(smartRecruitersTarget('https://jobs.smartrecruiters.com/AECOM2/744000123-example')).toEqual({ company: 'AECOM2', careersUrl: 'https://careers.smartrecruiters.com/AECOM2', key: 'smartrecruiters:aecom2' });
   expect(smartRecruitersTarget('https://smartrecruiters.com.evil.test/AECOM2')).toBeNull();
+});
+
+test('detects supported HTML career platforms without guessing tenant URLs', () => {
+  expect(successFactorsTarget('https://career5.successfactors.eu/career?company=acme')).toMatchObject({ company: 'acme' });
+  expect(icimsTarget('https://careers-acme.icims.com/jobs/search')).toMatchObject({ origin: 'https://careers-acme.icims.com' });
+  expect(taleoTarget('https://acme.taleo.net/careersection/external/jobsearch.ftl')).toMatchObject({ section: 'external' });
+  expect(phenomTarget('https://jobs.acme.com/global/en', '<script src="https://cdn.phenompeople.com/app.js"></script>')).toMatchObject({ origin: 'https://jobs.acme.com' });
+  expect(htmlPlatform('https://careers-acme.icims.com/jobs/1/example/job')).toBe('iCIMS');
+  expect(successFactorsTarget('https://successfactors.com.evil.test/career?company=acme')).toBeNull();
 });
 
 test('maps Workday public postings and paginates until total', async () => {

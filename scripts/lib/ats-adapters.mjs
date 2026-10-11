@@ -31,6 +31,48 @@ export function smartRecruitersTarget(raw) {
   } catch { return null; }
 }
 
+export function successFactorsTarget(raw) {
+  try {
+    const url = new URL(raw);
+    if (!/(?:^|\.)successfactors\.(?:com|eu)$/i.test(url.hostname)) return null;
+    const company = url.searchParams.get('company') || url.pathname.split('/').filter(Boolean)[0] || '';
+    return company ? { company, origin: url.origin, key: `successfactors:${url.hostname.toLowerCase()}:${company.toLowerCase()}` } : null;
+  } catch { return null; }
+}
+
+export function icimsTarget(raw) {
+  try {
+    const url = new URL(raw);
+    if (!/(?:^|\.)icims\.com$/i.test(url.hostname)) return null;
+    return { origin: url.origin, key: `icims:${url.hostname.toLowerCase()}` };
+  } catch { return null; }
+}
+
+export function taleoTarget(raw) {
+  try {
+    const url = new URL(raw);
+    if (!/(?:^|\.)taleo\.net$/i.test(url.hostname)) return null;
+    const section = url.pathname.match(/\/careersection\/([^/]+)/i)?.[1] ?? 'default';
+    return { origin: url.origin, section, key: `taleo:${url.hostname.toLowerCase()}:${section.toLowerCase()}` };
+  } catch { return null; }
+}
+
+export function phenomTarget(raw, html = '') {
+  try {
+    const url = new URL(raw);
+    const detected = /(?:^|\.)phenompeople\.com$/i.test(url.hostname) || /(?:phenompeople|phApp|phenom-tracking)/i.test(html);
+    return detected ? { origin: url.origin, key: `phenom:${url.hostname.toLowerCase()}` } : null;
+  } catch { return null; }
+}
+
+export function htmlPlatform(raw, html = '') {
+  if (successFactorsTarget(raw)) return 'SAP SuccessFactors';
+  if (icimsTarget(raw)) return 'iCIMS';
+  if (taleoTarget(raw)) return 'Oracle Taleo';
+  if (phenomTarget(raw, html)) return 'Phenom';
+  return null;
+}
+
 function baseJob({ id, title, company, location, url, publishedAt, description, tags, employmentType, checkedAt }) {
   return { id, title, company, location: location || 'Not specified', remote: /\bremote\b/i.test(location), workplace: /\bremote\b/i.test(location) ? 'remote' : location ? 'onsite' : 'unknown', source: 'Company Careers', url, publishedAt: publishedAt || '', description: clean(description), tags: tags.filter(Boolean).map(String).slice(0, 12), employmentType: employmentType || '', experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt, liveStatus: 'live', liveStatusReason: 'Present in the ATS public career feed at the recorded check time.' };
 }
