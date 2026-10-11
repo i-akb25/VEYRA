@@ -29,7 +29,26 @@ export function pageLinks(html, baseUrl) {
   return [...new Set(links)];
 }
 
-const publicAtsHost = /(?:greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|myworkdayjobs\.com|successfactors\.(?:com|eu)|oraclecloud\.com|icims\.com|jobvite\.com|workable\.com|bamboohr\.com)$/i;
+export function paginationLinks(html, baseUrl) {
+  const links = [];
+  for (const match of html.matchAll(/<a\b([^>]*)\bhref\s*=\s*["']([^"']+)["']([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    try {
+      const attributes = `${match[1]} ${match[3]}`;
+      const label = plainText(match[4]);
+      const raw = match[2].replaceAll('&amp;', '&').trim();
+      const candidate = new URL(raw, baseUrl);
+      const base = new URL(baseUrl);
+      const looksNext = /\b(?:next|more|older)\b/i.test(`${attributes} ${label}`) || /(?:^|[?&])(?:page|start|offset)=\d+/i.test(`${candidate.pathname}${candidate.search}`);
+      if (looksNext && candidate.protocol === 'https:' && candidate.hostname === base.hostname && !candidate.username && !candidate.password) {
+        candidate.hash = '';
+        links.push(candidate.href);
+      }
+    } catch { /* malformed pagination links are ignored */ }
+  }
+  return [...new Set(links)];
+}
+
+const publicAtsHost = /(?:greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|myworkdayjobs\.com|successfactors\.(?:com|eu)|oraclecloud\.com|icims\.com|taleo\.net|phenompeople\.com|jobvite\.com|workable\.com|bamboohr\.com)$/i;
 
 export function platformLinks(html) {
   const links = [];
@@ -44,8 +63,14 @@ export function platformLinks(html) {
   return [...new Set(links)];
 }
 
+function decodeEntities(value) {
+  const named = { amp: '&', apos: "'", gt: '>', lt: '<', nbsp: ' ', quot: '"' };
+  const point = (match, digits, radix) => { const value = Number.parseInt(digits, radix); return value >= 0 && value <= 0x10ffff ? String.fromCodePoint(value) : match; };
+  return value.replace(/&#x([0-9a-f]+);/gi, (match, digits) => point(match, digits, 16)).replace(/&#(\d+);/g, (match, digits) => point(match, digits, 10)).replace(/&([a-z]+);/gi, (match, name) => named[name.toLowerCase()] ?? match);
+}
+
 function plainText(html) {
-  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, ' ').replace(/\s+/g, ' ').trim();
+  return decodeEntities(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
 export function linkedJobs(html, baseUrl) {
@@ -53,14 +78,18 @@ export function linkedJobs(html, baseUrl) {
   const generic = /^(?:apply|apply now|careers?|jobs?|job search|search jobs?|view jobs?|open positions?|opportunities|read more|learn more|join us|details?)$/i;
   for (const match of html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
     try {
-      let title = plainText(match[2]).slice(0, 300);
+      let title = plainText(match[2]).replace(/^(?:view|see)\s+(?:this\s+)?job\s*[-:–—]?\s*/i, '').slice(0, 300);
       const raw = match[1].replaceAll('&amp;', '&').trim();
       const url = new URL(raw, baseUrl);
       url.hash = '';
       const path = `${url.pathname}${url.search}`;
       const standardDetailShape = /\/(?:job|jobs|position|positions|vacancy|requisition)(?:\/|\?|$)/i.test(path) && (/\d{3,}/.test(path) || /\/[a-z0-9][a-z0-9-]{8,}(?:\/|\?|$)/i.test(path));
       const smartRecruitersDetailShape = /(?:^|\.)jobs\.smartrecruiters\.com$/i.test(url.hostname) && /^\/[^/]+\/\d{6,}(?:-|\/|$)/.test(url.pathname);
-      const detailShape = standardDetailShape || smartRecruitersDetailShape;
+      const successFactorsDetailShape = /(?:^|\.)successfactors\.(?:com|eu)$/i.test(url.hostname) && (url.searchParams.has('career_job_req_id') || /job_listing/i.test(url.searchParams.get('career_ns') ?? ''));
+      const icimsDetailShape = /(?:^|\.)icims\.com$/i.test(url.hostname) && /\/jobs\/\d+\//i.test(url.pathname);
+      const taleoDetailShape = /(?:^|\.)taleo\.net$/i.test(url.hostname) && /\/jobdetail\.ftl$/i.test(url.pathname) && (url.searchParams.has('job') || url.searchParams.has('jobId'));
+      const phenomDetailShape = (/\/(?:[a-z]{2}\/)?(?:[a-z]{2}\/)?job\//i.test(url.pathname) && /(?:phenompeople|phApp|phenom-tracking)/i.test(html)) || /(?:^|\.)phenompeople\.com$/i.test(url.hostname);
+      const detailShape = standardDetailShape || smartRecruitersDetailShape || successFactorsDetailShape || icimsDetailShape || taleoDetailShape || phenomDetailShape;
       let location = '';
       if (/\b(?:cookie|consent|privacy|preferences?)\b/i.test(title)) {
         const parts = url.pathname.split('/').filter(Boolean);
@@ -142,5 +171,5 @@ export function normalisePosting(item, page, checkedAt) {
   const remote = item.jobLocationType === 'TELECOMMUTE';
   const restrictions = (Array.isArray(item.applicantLocationRequirements) ? item.applicantLocationRequirements : [item.applicantLocationRequirements]).filter(Boolean).map((place) => place.name).filter(Boolean);
   const count = item.totalJobOpenings;
-  return { id: `career-${url.href}`, title: item.title.slice(0, 300), company: item.hiringOrganization?.name || page.name, location: locations.join(' / ') || restrictions.join(', ') || 'Not specified', remote, workplace: remote ? 'remote' : locations.length ? 'onsite' : 'unknown', source: 'Company Careers', url: url.href, publishedAt: typeof item.datePosted === 'string' ? item.datePosted : '', description: String(item.description ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 4000), tags: [], employmentType: Array.isArray(item.employmentType) ? item.employmentType.join(', ') : String(item.employmentType ?? ''), experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt, closesAt, openings: typeof count === 'number' && Number.isSafeInteger(count) && count > 0 ? count : undefined, liveStatus: 'live', liveStatusReason: 'Found in the official careers page structured job listings at the recorded check time.' };
+  return { id: `career-${url.href}`, title: plainText(item.title).slice(0, 300), company: item.hiringOrganization?.name || page.name, location: locations.join(' / ') || restrictions.join(', ') || 'Not specified', remote, workplace: remote ? 'remote' : locations.length ? 'onsite' : 'unknown', source: 'Company Careers', url: url.href, publishedAt: typeof item.datePosted === 'string' ? item.datePosted : '', description: plainText(String(item.description ?? '')).slice(0, 4000), tags: [], employmentType: Array.isArray(item.employmentType) ? item.employmentType.join(', ') : String(item.employmentType ?? ''), experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt, closesAt, openings: typeof count === 'number' && Number.isSafeInteger(count) && count > 0 ? count : undefined, liveStatus: 'live', liveStatusReason: 'Found in the official careers page structured job listings at the recorded check time.' };
 }

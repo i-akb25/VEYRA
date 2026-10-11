@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { linkedJobs, looksLikeCareerPage, normalisePosting, pageLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
+import { linkedJobs, looksLikeCareerPage, normalisePosting, pageLinks, paginationLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './career-parser.mjs';
 test('only structured actual postings become results', () => {
   assert.deepEqual(structuredJobs('<h1>We hire graduates every year</h1>'), []);
   const html = '<script type="application/ld+json">{"@graph":[{"@type":"JobPosting","title":"Graduate engineer","url":"/jobs/1"}]}</script>';
@@ -20,6 +20,22 @@ test('extracts SmartRecruiters vacancies and embedded ATS destinations safely', 
   assert.deepEqual(platformLinks(embedded), ['https://careers.smartrecruiters.com/AECOM2']);
 });
 
+test('extracts supported HTML ATS vacancy links without accepting generic navigation', () => {
+  const cases = [
+    ['https://career5.successfactors.eu/career?company=acme', '<a href="/career?career_ns=job_listing&company=acme&career_job_req_id=1234">Graduate Engineer</a>'],
+    ['https://careers-acme.icims.com/jobs/search', '<a href="/jobs/4321/electrical-engineer/job">Electrical Engineer</a>'],
+    ['https://acme.taleo.net/careersection/external/jobsearch.ftl', '<a href="/careersection/external/jobdetail.ftl?job=9876">Automation Engineer</a>'],
+    ['https://jobs.acme.com/global/en', '<script src="https://cdn.phenompeople.com/app.js"></script><a href="/global/en/job/R12345/controls-engineer">Controls Engineer</a>']
+  ];
+  for (const [base, html] of cases) assert.equal(linkedJobs(html, base).length, 1);
+  assert.deepEqual(linkedJobs('<a href="/careersection/external/jobsearch.ftl">Search jobs</a>', cases[2][0]), []);
+});
+
+test('decodes source entities and removes visual-only view-job prefixes', () => {
+  const html = '<a href="/jobs/12345/role">View job &#xA; Technologi&#x10D;ka &amp; Engineer</a>';
+  assert.deepEqual(linkedJobs(html, 'https://careers.example.com/'), [{ title: 'Technologička & Engineer', location: '', url: 'https://careers.example.com/jobs/12345/role' }]);
+});
+
 test('discovers career links, sitemap entries and path-specific robots rules', () => {
   const html = '<a href="/careers/search?team=power&amp;page=2">Jobs</a><a href="mailto:test@example.com">Email</a>';
   assert.deepEqual(pageLinks(html, 'https://example.com/careers'), ['https://example.com/careers/search?team=power&page=2']);
@@ -30,6 +46,11 @@ test('discovers career links, sitemap entries and path-specific robots rules', (
   assert.equal(policy.allows(new URL('https://example.com/jobs/private/1')), false);
   assert.equal(policy.allows(new URL('https://example.com/jobs/private/public/1')), true);
   assert.deepEqual(policy.sitemaps, ['https://example.com/jobs.xml']);
+});
+
+test('follows explicit same-host pagination without following arbitrary links', () => {
+  const html = '<a rel="next" href="/jobs?page=2">Next</a><a href="https://evil.test/jobs?page=3">Next</a><a href="/about">About</a>';
+  assert.deepEqual(paginationLinks(html, 'https://careers.example.com/jobs?page=1'), ['https://careers.example.com/jobs?page=2']);
 });
 test('closed postings disappear, missing fields stay unknown, totals are not headcount', () => {
   const page = {name:'Employer',careersUrl:'https://example.com/careers'};

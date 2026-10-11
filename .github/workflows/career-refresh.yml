@@ -8,6 +8,8 @@ on:
     paths:
       - '.github/workflows/career-refresh.yml'
       - 'data/career-snapshot.json'
+      - 'data/employer-directory.json'
+      - 'data/employer-provenance.json'
       - 'lib/employer-directory.ts'
       - 'scripts/refresh-career-pages.mjs'
       - 'scripts/merge-career-snapshots.mjs'
@@ -18,6 +20,9 @@ on:
       - 'scripts/lib/career-quality.mjs'
       - 'scripts/lib/career-quality.test.mjs'
       - 'scripts/audit-career-snapshot.mjs'
+      - 'scripts/audit-employer-registry.mjs'
+      - 'scripts/import-employers.mjs'
+      - 'scripts/lib/employer-registry.mjs'
       - 'scripts/validate-public-ats.mjs'
 
 concurrency:
@@ -47,6 +52,8 @@ jobs:
         run: node scripts/validate-public-ats.mjs
       - name: Audit vacancy quality
         run: node scripts/audit-career-snapshot.mjs career-validation.json
+      - name: Audit employer registry
+        run: node scripts/audit-employer-registry.mjs
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -111,11 +118,13 @@ jobs:
       - run: node scripts/merge-career-snapshots.mjs career-reports
       - name: Audit vacancy quality
         run: node scripts/audit-career-snapshot.mjs data/career-snapshot.json
+      - name: Audit employer registry
+        run: node scripts/audit-employer-registry.mjs
       - name: Publish public vacancy snapshot
         run: |
           git config user.name "VEYRA source maintenance"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/career-snapshot.json
+          git add data/career-snapshot.json data/coverage-summary.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "chore: refresh official career-page vacancies"
           git push origin HEAD:main

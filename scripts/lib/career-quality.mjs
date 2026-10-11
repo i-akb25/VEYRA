@@ -22,6 +22,7 @@ export function auditCareerSnapshot(snapshot, now = new Date()) {
 
     const title = String(job?.title ?? '').trim();
     if (title.length < 3 || title.length > 300 || genericTitle.test(title)) errors.push({ code: 'invalid-title', message: `${label} has an empty or generic vacancy title.` });
+    if (/&(?:#(?:\d+|x[0-9a-f]+);?|[a-z]+;)/i.test(title)) errors.push({ code: 'encoded-title', message: `${label} contains an undecoded HTML entity.` });
     if (!String(job?.company ?? '').trim()) errors.push({ code: 'missing-company', message: `${label} has no employer.` });
 
     if (job?.closesAt) {
