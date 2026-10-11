@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "audit:careers": "node scripts/audit-career-snapshot.mjs",
     "verify:sources": "node scripts/verify-sources.mjs",
     "benchmark:search": "node scripts/benchmark-search.mjs"
   },

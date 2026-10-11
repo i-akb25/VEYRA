@@ -2,8 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { resolve4, resolve6 } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { employerDirectory } from '../lib/employer-directory.ts';
-import { linkedJobs, looksLikeCareerPage, normaliseLinkedPosting, normalisePosting, pageLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
-import { platformJobs } from './lib/ats-adapters.mjs';
+import { linkedJobs, looksLikeCareerPage, normaliseLinkedPosting, normalisePosting, pageLinks, platformLinks, robotsPolicy, sitemapLinks, structuredJobs } from './lib/career-parser.mjs';
+import { platformJobs, smartRecruitersTarget } from './lib/ats-adapters.mjs';
 
 const checkedAt = new Date().toISOString();
 const shardCount = Math.max(1, Number.parseInt(process.env.VEYRA_CAREER_SHARDS ?? '1', 10));
@@ -125,15 +125,22 @@ async function check(employer) {
   const seen = new Set();
   const failures = [];
   const jobs = [];
+  let pagesChecked = 0;
   const adaptersChecked = new Set();
   const providers = new Set();
-  try {
-    const landing = await safe(employer.careersUrl);
-    roots.push(landing);
-    queued.push(landing.href, ...await sitemapSeeds(landing));
-  } catch (error) {
-    return { source: { name: employer.name, url: employer.careersUrl, checkedAt, status: 'not confirmed', count: null, pagesChecked: 0, pagesDiscovered: 0, reason: error instanceof Error ? error.message : 'Source failed' }, jobs: [] };
+  for (const candidate of [employer.careersUrl, ...(employer.discoveryUrls ?? [])]) {
+    try {
+      const root = await safe(candidate);
+      if (!roots.some((item) => item.href === root.href)) roots.push(root);
+    } catch (error) {
+      failures.push(`${candidate}: ${error instanceof Error ? error.message : 'Source failed'}`);
+    }
   }
+  if (!roots.length) {
+    return { source: { name: employer.name, url: employer.careersUrl, checkedAt, status: 'not confirmed', count: null, pagesChecked: 0, pagesDiscovered: 0, reason: failures[0] ?? 'Source failed' }, jobs: [] };
+  }
+  queued.push(...roots.map((root) => root.href));
+  for (const root of roots) queued.push(...await sitemapSeeds(root));
 
   while (queued.length && seen.size < maxPages) {
     const raw = queued.shift();
@@ -141,10 +148,17 @@ async function check(employer) {
     seen.add(raw);
     try {
       const result = await request(raw);
+      pagesChecked += 1;
       if (!roots.some((root) => root.hostname === result.url.hostname) && knownAtsHosts.test(result.url.hostname)) roots.push(result.url);
       const items = structuredJobs(result.body);
       jobs.push(...items.map((item) => normalisePosting(item, employer, checkedAt)).filter(Boolean));
-      jobs.push(...linkedJobs(result.body, result.url).map((item) => normaliseLinkedPosting(item, employer, checkedAt)));
+      const linked = linkedJobs(result.body, result.url);
+      jobs.push(...linked.map((item) => normaliseLinkedPosting(item, employer, checkedAt)));
+      const smartRecruiters = smartRecruitersTarget(result.url);
+      if (smartRecruiters) {
+        if (linked.length) providers.add('SmartRecruiters');
+        if (!seen.has(smartRecruiters.careersUrl) && !queued.includes(smartRecruiters.careersUrl)) queued.push(smartRecruiters.careersUrl);
+      }
       try {
         const adapter = await platformJobs(result.url, employer, requestJson, checkedAt, adaptersChecked);
         if (adapter) { providers.add(adapter.provider); jobs.push(...adapter.jobs); }
@@ -152,7 +166,8 @@ async function check(employer) {
         failures.push(`${result.url.pathname}: ${error instanceof Error ? error.message : 'ATS adapter failed'}`);
       }
       const links = pageLinks(result.body, result.url).filter((url) => permittedLink(url, roots) && looksLikeCareerPage(url));
-      for (const link of links) if (!seen.has(link) && !queued.includes(link)) queued.push(link);
+      const atsLinks = platformLinks(result.body).filter((url) => permittedLink(url, roots));
+      for (const link of [...links, ...atsLinks]) if (!seen.has(link) && !queued.includes(link)) queued.push(link);
     } catch (error) {
       failures.push(`${new URL(raw).pathname}: ${error instanceof Error ? error.message : 'failed'}`);
     }
@@ -163,7 +178,7 @@ async function check(employer) {
   return {
     source: {
       name: employer.name, url: employer.careersUrl, checkedAt, status, count: uniqueJobs.length || null,
-      pagesChecked: Math.max(0, seen.size - failures.length), pagesDiscovered: seen.size + queued.length,
+      pagesChecked, pagesDiscovered: seen.size + queued.length,
       scanLimitReached: Boolean(queued.length && seen.size >= maxPages), providers: [...providers], failures: failures.slice(0, 5)
     },
     jobs: uniqueJobs

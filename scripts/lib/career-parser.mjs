@@ -29,6 +29,21 @@ export function pageLinks(html, baseUrl) {
   return [...new Set(links)];
 }
 
+const publicAtsHost = /(?:greenhouse\.io|lever\.co|ashbyhq\.com|smartrecruiters\.com|myworkdayjobs\.com|successfactors\.(?:com|eu)|oraclecloud\.com|icims\.com|jobvite\.com|workable\.com|bamboohr\.com)$/i;
+
+export function platformLinks(html) {
+  const links = [];
+  const decoded = html.replaceAll('\\/', '/').replaceAll('\\u002F', '/').replaceAll('\\u002f', '/').replaceAll('&amp;', '&');
+  for (const match of decoded.matchAll(/https:\/\/[^\s"'<>\\]+/gi)) {
+    try {
+      const url = new URL(match[0]);
+      url.hash = '';
+      if (url.protocol === 'https:' && !url.username && !url.password && publicAtsHost.test(url.hostname)) links.push(url.href);
+    } catch { /* malformed embedded URLs are ignored */ }
+  }
+  return [...new Set(links)];
+}
+
 function plainText(html) {
   return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -43,7 +58,9 @@ export function linkedJobs(html, baseUrl) {
       const url = new URL(raw, baseUrl);
       url.hash = '';
       const path = `${url.pathname}${url.search}`;
-      const detailShape = /\/(?:job|jobs|position|positions|vacancy|requisition)(?:\/|\?|$)/i.test(path) && (/\d{3,}/.test(path) || /\/[a-z0-9][a-z0-9-]{8,}(?:\/|\?|$)/i.test(path));
+      const standardDetailShape = /\/(?:job|jobs|position|positions|vacancy|requisition)(?:\/|\?|$)/i.test(path) && (/\d{3,}/.test(path) || /\/[a-z0-9][a-z0-9-]{8,}(?:\/|\?|$)/i.test(path));
+      const smartRecruitersDetailShape = /(?:^|\.)jobs\.smartrecruiters\.com$/i.test(url.hostname) && /^\/[^/]+\/\d{6,}(?:-|\/|$)/.test(url.pathname);
+      const detailShape = standardDetailShape || smartRecruitersDetailShape;
       let location = '';
       if (/\b(?:cookie|consent|privacy|preferences?)\b/i.test(title)) {
         const parts = url.pathname.split('/').filter(Boolean);

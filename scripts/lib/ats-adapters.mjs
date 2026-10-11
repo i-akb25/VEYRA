@@ -22,6 +22,15 @@ export function oracleTarget(raw) {
   } catch { return null; }
 }
 
+export function smartRecruitersTarget(raw) {
+  try {
+    const url = new URL(raw);
+    if (!/^(?:jobs|careers)\.smartrecruiters\.com$/i.test(url.hostname)) return null;
+    const company = url.pathname.split('/').filter(Boolean)[0];
+    return company ? { company, careersUrl: `https://careers.smartrecruiters.com/${encodeURIComponent(company)}`, key: `smartrecruiters:${company.toLowerCase()}` } : null;
+  } catch { return null; }
+}
+
 function baseJob({ id, title, company, location, url, publishedAt, description, tags, employmentType, checkedAt }) {
   return { id, title, company, location: location || 'Not specified', remote: /\bremote\b/i.test(location), workplace: /\bremote\b/i.test(location) ? 'remote' : location ? 'onsite' : 'unknown', source: 'Company Careers', url, publishedAt: publishedAt || '', description: clean(description), tags: tags.filter(Boolean).map(String).slice(0, 12), employmentType: employmentType || '', experienceLevel: 'any', freshness: 'unknown', lastCheckedAt: checkedAt, verifiedAt: checkedAt, liveStatus: 'live', liveStatusReason: 'Present in the ATS public career feed at the recorded check time.' };
 }

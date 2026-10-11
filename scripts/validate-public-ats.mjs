@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { oracleJobs, oracleTarget, workdayJobs, workdayTarget } from './lib/ats-adapters.mjs';
+import { linkedJobs } from './lib/career-parser.mjs';
 
 async function fetchJson(url, init = {}) {
   let lastError;
@@ -23,6 +24,21 @@ async function fetchJson(url, init = {}) {
   throw lastError instanceof Error ? lastError : new Error('ATS request failed');
 }
 
+async function fetchText(url) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15_000), headers: { Accept: 'text/html', 'User-Agent': 'VEYRA-ATS-contract-check/1.0' } });
+      if (!response.ok) throw new Error(`${new URL(url).hostname} returned HTTP ${response.status}`);
+      const length = Number(response.headers.get('content-length') ?? 0);
+      if (length > 2_000_000) throw new Error('ATS page exceeded size limit');
+      return await response.text();
+    } catch (error) { lastError = error; }
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+  }
+  throw lastError instanceof Error ? lastError : new Error('ATS page request failed');
+}
+
 const checkedAt = new Date().toISOString();
 const checks = [
   {
@@ -31,7 +47,11 @@ const checks = [
   },
   {
     name: 'Oracle Recruiting public candidate feed',
-    run: () => oracleJobs(oracleTarget('https://eeho.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/jobsearch/jobs'), { name: 'Oracle' }, fetchJson, checkedAt, 25)
+    run: () => oracleJobs(oracleTarget('https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs'), { name: 'JPMorgan Chase' }, fetchJson, checkedAt, 25)
+  },
+  {
+    name: 'SmartRecruiters public career page',
+    run: async () => linkedJobs(await fetchText('https://careers.smartrecruiters.com/AECOM2'), 'https://careers.smartrecruiters.com/AECOM2')
   }
 ];
 
