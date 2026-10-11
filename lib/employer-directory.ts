@@ -1,4 +1,4 @@
-import directory from "../data/employer-directory.json";
+import directory from "../data/employer-directory.json" with { type: "json" };
 
 export type EmployerDirectoryEntry = {
   name: string;
