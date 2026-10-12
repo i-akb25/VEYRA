@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-12T10:59:46.500Z",
+  "generatedAt": "2026-10-12T12:32:39.572Z",
   "directoryEntries": 160,
   "configuredFeeds": 107,
   "distinctDestinations": 265,
@@ -9,9 +9,9 @@
     "ashby": 9,
     "smartrecruiters": 41
   },
-  "snapshotCheckedAt": "2026-10-11T17:10:09.926Z",
-  "snapshotJobs": 4988,
+  "snapshotCheckedAt": "2026-10-12T12:29:48.488Z",
+  "snapshotJobs": 5045,
   "snapshotSources": 160,
-  "sourcesWithConfirmedVacancies": 59,
-  "pagesChecked": 2546
+  "sourcesWithConfirmedVacancies": 62,
+  "pagesChecked": 2615
 }
