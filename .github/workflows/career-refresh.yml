@@ -120,11 +120,19 @@ jobs:
         run: node scripts/audit-career-snapshot.mjs data/career-snapshot.json
       - name: Audit employer registry
         run: node scripts/audit-employer-registry.mjs
-      - name: Publish public vacancy snapshot
+      - name: Prepare release checksums
+        run: sha256sum data/career-snapshot.json data/coverage-summary.json > career-data-sha256.txt
+      - name: Publish deployment-independent career data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          git config user.name "VEYRA source maintenance"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/career-snapshot.json data/coverage-summary.json
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "chore: refresh official career-page vacancies"
-          git push origin HEAD:main
+          tag="career-data-latest"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --target main --title "VEYRA live career data" --notes "Machine-generated public vacancy data. Updated by the bounded official career-page workflow; contains no candidate or resume data."
+          fi
+          gh release upload "$tag" data/career-snapshot.json data/coverage-summary.json career-data-sha256.txt --clobber
+      - name: Publish data summary
+        run: |
+          echo "## VEYRA live career data" >> "$GITHUB_STEP_SUMMARY"
+          echo "Published snapshot and coverage assets without committing to main or triggering a Vercel deployment." >> "$GITHUB_STEP_SUMMARY"
