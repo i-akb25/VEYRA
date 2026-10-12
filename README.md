@@ -46,6 +46,7 @@ VEYRA is a privacy-first job-intelligence workspace. It searches current public 
 - Hindi guidance, profession/location/government landing pages and a GitHub-backed source-submission form
 - Indexable About, Sources, Methodology, Privacy and Disclaimer pages, structured data, sitemap and robots policy
 - Public `/api/health` coverage-freshness status and a mandatory GitHub release gate covering tests, types, lint, registry and vacancy audits, and the production build
+- Deployment-independent daily vacancy data published as cached GitHub Release assets, with a verified bundled fallback and no scheduled Vercel redeployments
 
 ## Local development
 
@@ -117,7 +118,7 @@ The Sources page lists official career destinations and public ATS boards even w
 
 Job cards and CSV/JSON exports include source-supplied headcount and application deadlines. Missing values remain “Not stated”. Employer feed posting totals are shown separately from the number of people a role will hire.
 
-Daily GitHub Actions refreshes public ATS counts and scans every registered employer destination through official sitemaps, career indexes and linked vacancy pages. New structured vacancies enter the next deployment automatically, without editing application code. Each employer scan is bounded and reports incomplete coverage explicitly. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
+Daily GitHub Actions verifies public ATS health and scans every registered employer destination through official sitemaps, career indexes and linked vacancy pages. New structured vacancies are published to a stable release asset and enter runtime search after the fifteen-minute data cache refreshes, without editing application code or redeploying Vercel. Each employer scan is bounded and reports incomplete coverage explicitly. Selected public ATS feeds are also refreshed on searches when their twenty-minute cache expires. Structured career-page snapshots expire after 26 hours. See [career discovery operations](docs/career-discovery-operations.md).
 
 The career worker also extracts specific vacancy links from official listing pages and uses public Workday and Oracle Recruiting candidate endpoints when those platforms are detected. Employer-linked SAP SuccessFactors, iCIMS, Oracle Taleo and Phenom pages are recognised and processed through bounded public HTML discovery. It does not treat generic “Search jobs” navigation as a vacancy. Missing dates, locations and hiring counts remain unstated.
 

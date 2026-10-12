@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { recruitmentTypes, sourceFacts } from "@/lib/recruitment";
-import snapshot from "@/data/career-snapshot.json";
+import { loadCareerSnapshot } from "@/lib/career-data";
 import { curatedJobs } from "@/lib/curated-jobs";
 import { extractEligibility } from "@/lib/eligibility";
 import { employersForSearch, type BoardProvider, type EmployerSource } from "@/lib/employers";
@@ -144,8 +144,11 @@ async function executeSearch(input: z.infer<typeof searchSchema>): Promise<Searc
   const warnings = health.filter((item) => item.status !== "healthy").map((item) => `${item.name} is ${item.status}; other official sources were still searched.`);
   const negatives = negative.split(/[,;\n]/).map((term) => term.trim().toLowerCase()).filter(Boolean); const requiredTerms = required.split(/[,;\n]/).map((term) => term.trim().toLowerCase()).filter(Boolean); const qualificationWords = qualificationTerms[qualification]; const curated = [...new Map(categories.flatMap(curatedJobs).map((job) => [job.id, job])).values()];
   if (curated.length) health.push({ name: "Curated official company careers", status: "healthy", count: curated.length, lastCheckedAt: checkedAt, cached: true });
+  const snapshotResult = await loadCareerSnapshot();
+  const snapshot = snapshotResult.value;
   const snapshotJobs: Job[] = (snapshot.jobs as Job[]).filter((job) => job.lastCheckedAt && Date.now() - Date.parse(job.lastCheckedAt) < 26 * 60 * 60 * 1000).map((job) => finish(job));
-  if (snapshotJobs.length) health.push({ name: "Scheduled official career-page checks", status: "healthy", count: snapshotJobs.length, lastCheckedAt: snapshot.checkedAt ?? undefined, cached: true });
+  if (snapshotResult.source === "bundled") warnings.push("Live career data was temporarily unavailable; VEYRA used its last verified bundled snapshot.");
+  if (snapshotJobs.length) health.push({ name: "Scheduled official career-page checks", status: snapshotResult.source === "release" ? "healthy" : "degraded", count: snapshotJobs.length, message: snapshotResult.source === "bundled" ? "Using the last verified bundled snapshot." : undefined, lastCheckedAt: snapshot.checkedAt ?? undefined, cached: true });
   const gathered = [...outcomes.flatMap((result) => result.jobs), ...snapshotJobs, ...curated];
   const unique = deduplicateJobs(gathered);
   const ranked = unique.map((job) => { const context = `${job.title} ${job.company} ${job.description} ${job.tags.join(" ")}`.toLowerCase(); const roleScore = relevance(job, q, categories, selectedRolePhrases, mode, optional); const roleMatchScore = job.source === "Company Careers" ? Math.max(80, roleScore) : roleScore; const industryBoost = industryTerms[industry].some((term) => context.includes(term)) ? 35 : 0; const fit = locationFit(job, location, scope, input.nearby === "true"); const reasons = [roleScore >= 100 ? "Role title matches" : roleScore >= 45 ? "Relevant title or skills" : "Broader description match", fit === "exact" ? "Requested location or nearby cluster" : fit === "global-remote" ? "Worldwide remote" : fit === "india-fallback" ? "India-based" : fit === "international" ? "International market" : "Location unrestricted", job.freshness === "new" ? "Recently posted" : "", job.employmentType ? `${job.employmentType}` : ""].filter(Boolean); return { ...job, roleMatchScore, relevanceScore: roleMatchScore + industryBoost + locationScore(job, location, scope, input.nearby === "true") + (job.freshness === "new" ? 8 : job.freshness === "recent" ? 4 : 0), matchReasons: reasons, qualification: job.qualification === "Not stated" ? qualificationWords.find((term) => context.includes(term)) ?? "Not stated" : job.qualification, locationFit: fit, lastCheckedAt: job.lastCheckedAt ?? job.verifiedAt }; });

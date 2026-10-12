@@ -5,17 +5,18 @@
 - Searchable official career directory, including employers with no current vacancies.
 - Explicit recruitment classification and filters for off-campus, campus, fresher, graduate, internship and apprenticeship opportunities.
 - Source-supplied per-role hiring counts and closing dates in cards and exports. Feed listing totals are never substituted for hiring counts.
-- Daily ATS count/sample-title refresh, retaining empty feeds and preserving prior evidence during failures.
+- Daily ATS health verification, retaining empty feeds and preserving checked-in registry evidence during failures.
 - Daily scans of every registered employer career destination. Eight bounded workers inspect official sitemaps, career indexes and linked vacancy pages, then merge structured JobPosting records into a versioned public-only snapshot.
+- Deployment-independent publishing of the current snapshot and coverage summary as stable GitHub Release assets. VEYRA reads them at runtime with a fifteen-minute cache and falls back to the last release-verified bundled snapshot when the asset host is unavailable.
 - Verified vacancy-link extraction for career sites that omit JobPosting metadata, public Workday and Oracle Recruiting candidate adapters with bounded pagination, and employer-linked HTML recognition for SAP SuccessFactors, iCIMS, Oracle Taleo and Phenom.
 - Search ingestion of snapshots under 26 hours old, closed-date exclusion and original source check timestamps.
 - Curated links labelled status unknown until current evidence is available.
 
 ## Activation
 
-Merge the reviewed branch into main. Scheduled GitHub workflows run only from the default branch. Enable GitHub Actions and permit the workflow token to write repository contents. The existing Vercel Git integration must deploy main commits for published snapshots to reach production. No resume, candidate profile or search history enters these jobs. Actions usage and hosting limits still apply.
+Merge the reviewed branch into main. Scheduled GitHub workflows run only from the default branch. Enable GitHub Actions and permit the career refresh workflow token to write repository contents so it can replace assets on the fixed `career-data-latest` release. Scheduled data refreshes never commit to `main`, so they do not trigger Vercel deployments. VEYRA reads the release assets at runtime; ordinary Vercel Git integration is needed only for application-code changes. No resume, candidate profile or search history enters these jobs. Actions usage and hosting limits still apply.
 
-Run `node --experimental-strip-types scripts/refresh-career-pages.mjs` or dispatch Refresh official career pages. Run `VEYRA_PUBLISH_SOURCE_FACTS=true node scripts/verify-sources.mjs` to update public ATS counts. Both only process registered official sources.
+Run `node --experimental-strip-types scripts/refresh-career-pages.mjs` locally or dispatch Refresh official career pages to publish current data. Run `node scripts/verify-sources.mjs` to verify public ATS health without changing the checked-in registry. Both only process registered official sources.
 
 ## Honest coverage limits
 
@@ -27,7 +28,7 @@ When a listing page links to a specific job-shaped URL and supplies a meaningful
 
 The directory is stored in `data/employer-directory.json`; audit evidence is stored in `data/employer-provenance.json`. Run `node scripts/import-employers.mjs reviewed-additions.json` for a dry run, then repeat with `--write` only after the entries and evidence are reviewed. Run `pnpm audit:registry` after any source change. The importer rejects insecure URLs, credentials in URLs, IP literals, invalid feed slugs, duplicate employer names, duplicate feed identities and directory entries without provenance.
 
-ATS feeds are fetched on relevant searches with a twenty-minute cache; structured directory pages are refreshed daily. This is not an every-search crawl of all employers. Platform redesigns and new unsupported platforms can still require adapter maintenance. Government notice parsing, seat reservations, campus eligibility restrictions and deadlines embedded only in PDFs are not expanded by this branch; the existing government desk remains separate.
+ATS feeds are fetched on relevant searches with a twenty-minute cache; structured directory pages are refreshed daily and their release asset is cached for fifteen minutes. This is not an every-search crawl of all employers. Platform redesigns and new unsupported platforms can still require adapter maintenance. Government notice parsing, seat reservations, campus eligibility restrictions and deadlines embedded only in PDFs are not expanded by this branch; the existing government desk remains separate.
 
 ## Validation
 
